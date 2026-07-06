@@ -415,7 +415,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <option value="">— 없음 (빈 칸) —</option>
     </select>
     <div style="font-size:11px;color:#8a8074;font-family:system-ui,sans-serif;margin-top:4px;line-height:1.5">
-      · CoC 7판 / inSANe 룰의 롤템플릿 스타일이 기본 내장되어 있습니다. CSS 파일이 없어도 골라 바로 쓰고, 고른 뒤 아래 칸에서 자유롭게 수정하세요.
+      · CoC 7판 / inSANe 룰의 롤템플릿 스타일이 기본 내장되어 있습니다.
     </div>
     <label style="margin-top:8px">테이블 스타일 소스 (직접 편집 가능)</label>
     <textarea id="rollCss" rows="7" placeholder="롤 테이블 CSS를 붙여넣거나, 위에서 기본 스타일을 선택하세요."></textarea>
@@ -425,9 +425,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     <h2>6 · 내보내기</h2>
     <label>책 제목 (EPUB용)</label>
-    <input type="text" id="bookTitle" placeholder="예: 나는 살아서 말하리라">
+    <input type="text" id="bookTitle" placeholder="">
     <label>저자 (EPUB용)</label>
-    <input type="text" id="bookAuthor" placeholder="예: 헤르츠">
+    <input type="text" id="bookAuthor" placeholder="">
     <details id="epubLayoutDetails" style="margin-top:8px">
       <summary style="cursor:pointer;font-size:12px;font-family:system-ui,sans-serif;color:var(--accent);user-select:none">
         EPUB 폭·여백 커스텀 설정 (기본값 사용 시 열 필요 없음)
@@ -2649,8 +2649,9 @@ function buildBook(forExport){
   let lastSpeaker = null;
   let narrationMode = false;   // byEmpty 메시지부터 다음 화자 헤더 전까지 내레이션 연속 처리
   let lastWasNarration = false; // 직전 turn 이 내레이션이었는지 (divider vs 공백 판단용)
-  let prevHeaderSpeaker = null;      // 직전에 헤더(아바타+이름)를 출력한 화자
-  let lastWasNarrationHeader = false; // 직전 처리 메시지가 내레이션이었는지 (헤더 재출력 판단용)
+  let prevHeaderSpeaker = null;      // (구) — 미사용
+  let lastWasNarrationHeader = false; // (구) — 미사용
+  let lastRenderedSpeaker = null;    // 직전에 실제로 렌더된 (내레이션 아닌) 화자. 내레이션을 지나면 null.
   let html = '';
 
   MESSAGES.forEach((m,idx)=>{
@@ -2708,22 +2709,28 @@ function buildBook(forExport){
       }
     }
     // 화자 헤더(아바타 + 이름): 일반/롤 공통으로 동일하게 정렬. 내레이션은 헤더 없음.
-    // 같은 화자가 연속으로 채팅하면 아바타·이름을 다시 출력하지 않는다.
-    //  - 직전에 헤더를 출력한 화자(prevHeaderSpeaker)와 현재 화자가 같으면 헤더 생략
-    //  - 화자가 바뀌었거나(첫 등장 포함) 내레이션↔일반 전환이 있으면 다시 출력
-    const sameSpeakerContinues = !isNarration && !!m.speaker &&
-      m.speaker === prevHeaderSpeaker && !lastWasNarrationHeader;
-    const hasHeader = !isNarration && (avHtml || m.speaker) && !sameSpeakerContinues;
+    // 규칙(견고화):
+    //  - 내레이션 블록은 헤더 없음. 내레이션을 지나면 lastRenderedSpeaker 를 초기화(null)해,
+    //    이어지는 실제 화자는 반드시 헤더를 다시 보여준다. (버그2 해결)
+    //  - 롤 메시지는 항상 헤더 표시(주사위를 굴린 캐릭터를 항상 명시). (버그1 해결)
+    //  - 그 외 일반 메시지는 "직전에 렌더된 화자"와 다를 때만 헤더 표시(같은 화자 연속이면 생략).
+    let hasHeader;
+    if(isNarration){
+      hasHeader = false;
+    } else if(m.isRoll){
+      hasHeader = (avHtml || m.speaker);           // 롤은 항상 헤더
+    } else {
+      const sameSpeakerContinues = !!m.speaker && m.speaker === lastRenderedSpeaker;
+      hasHeader = (avHtml || m.speaker) && !sameSpeakerContinues;
+    }
     const header = hasHeader
       ? '<div class="msg-head">'+avHtml+(m.speaker?'<span class="speaker"'+ce+'>'+esc(m.speaker)+'</span>':'')+'</div>'
       : '';
-    // 헤더를 실제로 출력한 경우에만 prevHeaderSpeaker 갱신.
-    // 내레이션 구간을 지나면 다음 동일 화자라도 헤더를 다시 보여준다.
+    // 렌더된 화자 추적 갱신: 내레이션이면 초기화, 실제 화자면 그 화자로 설정
     if(isNarration){
-      lastWasNarrationHeader = true;
+      lastRenderedSpeaker = null;
     } else if(m.speaker){
-      if(hasHeader){ prevHeaderSpeaker = m.speaker; }
-      lastWasNarrationHeader = false;
+      lastRenderedSpeaker = m.speaker;
     }
 
     if(m.isRoll && optRoll){
@@ -2742,8 +2749,11 @@ function buildBook(forExport){
   return html;
 }
 
+// 편집된 메시지 인덱스만 추적 → 전체 DOM 스캔 대신 변경분만 동기화 (성능)
+const DIRTY_IDX = new Set();
 function renderPreview(){
   const book=document.getElementById('book');
+  DIRTY_IDX.clear();   // 새 DOM 이므로 보류 중 편집 없음
   if(!MESSAGES.length){book.innerHTML='<div class="placeholder">파싱된 메시지가 없습니다.</div>';return;}
   book.innerHTML=buildBook(false);
 }
@@ -2752,19 +2762,19 @@ function renderPreview(){
    삭제/재렌더 전에 호출해야 편집 내용이 유실되지 않는다. */
 function syncEditsToModel(){
   const book=document.getElementById('book');
-  book.querySelectorAll('.msg[data-idx], .desc-banner[data-idx]').forEach(node=>{
-    const idx=+node.dataset.idx;
+  // 편집이 발생한 블록이 없으면 즉시 반환
+  if(DIRTY_IDX.size===0) return;
+  DIRTY_IDX.forEach(idx=>{
     const m=MESSAGES[idx];
-    if(!m) return;
-    if(m.type==='desc') return; // desc 배너는 편집 비대상
-    if(m.isRoll) return;        // 롤 본문은 편집 비대상
-    // 화자명(편집 가능)
+    if(!m || m.type==='desc' || m.isRoll) return;
+    const node=book.querySelector('.msg[data-idx="'+idx+'"]');
+    if(!node) return;
     const spk=node.querySelector('.speaker');
     if(spk){ m.speaker = spk.textContent.trim(); }
-    // 본문
     const body=node.querySelector('.msg-body');
     if(body){ m.bodyHTML = body.innerHTML; }
   });
+  DIRTY_IDX.clear();
 }
 
 /* ---------- undo / redo history ----------
@@ -2780,7 +2790,7 @@ function snapshot(){
   if(HPTR>=0 && HISTORY[HPTR] && HISTORY[HPTR].html===state.html) return;
   HISTORY=HISTORY.slice(0,HPTR+1);
   HISTORY.push(state);
-  if(HISTORY.length>100) HISTORY.shift();
+  if(HISTORY.length>30) HISTORY.shift();
   HPTR=HISTORY.length-1;
   updateUndoButtons();
 }
@@ -2824,10 +2834,13 @@ document.getElementById('book').addEventListener('mousedown',e=>{
   }
 });
 
-/* 텍스트 직접 편집(contenteditable) 시 디바운스 스냅샷 */
+/* 텍스트 직접 편집(contenteditable) 시 디바운스 스냅샷 + 편집 블록 dirty 표시 */
 let editTimer=null;
-document.getElementById('book').addEventListener('input',()=>{
+document.getElementById('book').addEventListener('input',e=>{
   if(restoring) return;
+  // 편집이 일어난 블록의 인덱스를 dirty 로 표시 (동기화 최적화)
+  const blk = e.target && e.target.closest ? e.target.closest('.msg[data-idx]') : null;
+  if(blk){ const i=+blk.dataset.idx; if(!isNaN(i)) DIRTY_IDX.add(i); }
   clearTimeout(editTimer);
   editTimer=setTimeout(snapshot, 500);
 });
