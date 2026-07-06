@@ -297,6 +297,28 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <input type="number" id="epubPadMobile" value="12" min="0">
       </div>
     </details>
+    <details id="epubImageDetails" style="margin-top:8px">
+      <summary style="cursor:pointer;font-size:12px;font-family:system-ui,sans-serif;color:var(--accent);user-select:none">
+        EPUB 이미지 압축 설정 (큰 이미지 축소)
+      </summary>
+      <div style="margin-top:6px;padding-left:2px">
+        <label class="chk"><input type="checkbox" id="imgResizeOn"> 큰 이미지 최대 폭 제한(축소) 사용</label>
+        <label>최대 가로 폭 (px · 이 값을 넘는 이미지만 축소)</label>
+        <input type="number" id="imgMaxW" value="1600" min="200" step="100">
+        <label>재인코딩 형식</label>
+        <select id="imgFormat">
+          <option value="keep">원본 형식 유지 (JPEG는 JPEG, PNG는 PNG)</option>
+          <option value="jpeg">JPEG로 통일 (사진·삽화에 적합, 용량 최소)</option>
+          <option value="webp">WebP로 통일 (더 작은 용량, 일부 구형 리더 미지원)</option>
+        </select>
+        <label>JPEG/WebP 품질 (0.5~1.0 · 높을수록 고화질)</label>
+        <input type="number" id="imgQuality" value="0.9" min="0.5" max="1" step="0.05">
+        <div style="font-size:11px;color:#8a8074;font-family:system-ui,sans-serif;margin-top:4px;line-height:1.5">
+          · 최대 폭보다 작은 이미지는 손대지 않습니다. 큰 이미지만 가로 폭을 이 값으로 줄이고, 세로는 비율에 맞춰 자동 조정됩니다.<br>
+          · 투명(알파)이 있는 PNG는 JPEG로 바꾸면 배경이 검게 되므로, 원본 형식 유지 또는 WebP를 권장합니다.
+        </div>
+      </div>
+    </details>
     <label>표지 이미지 (선택)</label>
     <div id="coverDrop" tabindex="0" title="클릭하거나 이미지를 끌어다 놓으세요"
          style="margin-top:2px;border:2px dashed var(--line);border-radius:8px;background:#fff;
@@ -2462,7 +2484,9 @@ function buildBook(forExport){
     if(m.type==='desc'){
       // desc 배너는 인라인 스타일(padding/box-shadow 등)을 그대로 보존하기 위해
       // contenteditable을 적용하지 않는다 → 브라우저 style 재직렬화로 인한 변형 방지
-      html += '<div class="desc-banner"'+dataIdx+'>'+delBtn+m.rawHTML+'</div>';
+      // 닫히지 않은 태그가 배너 밖(다음 메시지)으로 새는 것을 막기 위해 균형을 맞춘다.
+      const safeRaw = (typeof balanceHtmlFragment==='function') ? balanceHtmlFragment(m.rawHTML||'') : (m.rawHTML||'');
+      html += '<div class="desc-banner"'+dataIdx+'>'+delBtn+safeRaw+'</div>';
       return;
     }
     const isTurnStart = !!(m.speaker || m.avatar || m.byEmpty);
@@ -2637,7 +2661,10 @@ document.getElementById('fileInput').addEventListener('change',async e=>{
     try{
       const html=await epubToHtml(await f.arrayBuffer());
       document.getElementById('srcInput').value=html;
-      status.textContent='EPUB 변환 완료 — "파싱 / 미리보기"를 누르세요.';
+      const skipped=window.__epubSkippedImages||0;
+      status.textContent = skipped>0
+        ? ('EPUB 변환 완료 — 용량 제한으로 이미지 '+skipped+'개는 원본 경로로 유지됨. "파싱 / 미리보기"를 누르세요.')
+        : 'EPUB 변환 완료 — "파싱 / 미리보기"를 누르세요.';
     }catch(err){
       console.error(err);
       status.textContent='';
@@ -2702,16 +2729,28 @@ async function epubToHtml(arrayBuffer){
     }
   });
 
-  // 3) 이미지 인덱스: zip내 경로 -> data URI
-  const imageIndex={};
+  // 3) 이미지 인덱스: zip내 경로 -> Blob URL
+  //    같은 이미지가 본문에서 수백~수천 번 참조되어도, base64 를 매번 인라인하면
+  //    문자열이 폭증해 "Invalid string length" 가 난다. 대신 이미지당 Blob URL 을
+  //    한 번만 만들어 짧은 URL 문자열로 참조한다(이미지 바이너리는 1회만 메모리에 상주).
   const mimeOf=ext=>({'.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.gif':'image/gif','.svg':'image/svg+xml','.webp':'image/webp'}[ext]||'image/jpeg');
+  const imageIndex={};   // zip 경로 -> blob URL
+  // 이전 변환에서 만든 Blob URL 정리(메모리 누수 방지)
+  try{ (window.__epubBlobUrls||[]).forEach(u=>URL.revokeObjectURL(u)); }catch(_){}
+  window.__epubBlobUrls=[];               // 이번에 만든 blob URL 목록
+  window.__epubBlobMeta={};               // blob URL -> {mime} (내보내기에서 사용)
   for(const name of Object.keys(files)){
     const ext=(name.match(/\.[^.]+$/)||[''])[0].toLowerCase();
     if(['.jpg','.jpeg','.png','.gif','.svg','.webp'].includes(ext)){
-      const b64=await files[name].async('base64');
-      imageIndex[name]='data:'+mimeOf(ext)+';base64,'+b64;
+      const mime=mimeOf(ext);
+      const buf=await files[name].async('uint8array');
+      const url=URL.createObjectURL(new Blob([buf], {type:mime}));
+      imageIndex[name]=url;
+      window.__epubBlobUrls.push(url);
+      window.__epubBlobMeta[url]={mime};
     }
   }
+  let skippedImages=0; // Blob URL 방식에서는 건너뛰는 이미지가 없다
 
   // 4) CSS 수집 (롤 테이블 스타일 등 보존)
   let cssParts=[];
@@ -2746,11 +2785,26 @@ async function epubToHtml(arrayBuffer){
     chunks.push(inlineImages(bodyInner(raw), dp));
   }
   if(!title) title='제목 없음';
-  const bodyHtml=chunks.join('\n');
 
-  return '<!DOCTYPE html>\n<html lang="'+lang+'">\n<head>\n<meta charset="utf-8"/>\n'+
-    '<title>'+title+'</title>\n<style>\nimg{max-width:100%;height:auto}\n'+epubCss+'\n</style>\n</head>\n<body>\n'+
-    bodyHtml+'\n</body>\n</html>';
+  // 본문 결합 시 문자열 한계를 넘으면 명확히 안내 (try/catch 로 RangeError 포착)
+  let bodyHtml;
+  try{
+    bodyHtml=chunks.join('\n');
+  }catch(err){
+    throw new Error('본문이 너무 커서 한 번에 불러올 수 없습니다(이미지 과다). 이미지가 많은 EPUB이라면 일부를 줄인 뒤 다시 시도해 주세요.');
+  }
+
+  let doc;
+  try{
+    doc='<!DOCTYPE html>\n<html lang="'+lang+'">\n<head>\n<meta charset="utf-8"/>\n'+
+      '<title>'+title+'</title>\n<style>\nimg{max-width:100%;height:auto}\n'+epubCss+'\n</style>\n</head>\n<body>\n'+
+      bodyHtml+'\n</body>\n</html>';
+  }catch(err){
+    throw new Error('문서가 문자열 최대 길이를 초과했습니다(이미지 과다). 이미지 수·용량을 줄인 EPUB으로 다시 시도해 주세요.');
+  }
+  // 건너뛴 이미지 수를 호출부에 전달 (상태 표시용)
+  window.__epubSkippedImages = skippedImages;
+  return doc;
 }
 
 document.getElementById('parseBtn').addEventListener('click',()=>runParse(document.getElementById('srcInput').value));
@@ -3069,13 +3123,23 @@ function closeHtmlModal(){
   htmlModal.classList.remove('open');
   htmlEditIdx=-1; htmlEditField='';
 }
+/* 편집한 HTML 조각의 태그 균형을 맞춘다.
+   닫히지 않은 <div> 등이 있으면 브라우저 innerHTML 파서가 조각 내부에서 자동으로 닫아준다.
+   → 배너/메시지 밖(다음 메시지들)으로 태그가 새어 나가 전체 정렬·배경이 오염되는 것을 방지. */
+function balanceHtmlFragment(html){
+  const tmp=document.createElement('div');
+  tmp.innerHTML=String(html);
+  return tmp.innerHTML;
+}
+
 function applyHtmlModal(){
   if(htmlEditIdx<0 || !htmlEditField) { closeHtmlModal(); return; }
   const m=MESSAGES[htmlEditIdx];
   if(!m){ closeHtmlModal(); return; }
   // 미리보기에서 다른 메시지의 직접 편집분이 유실되지 않도록 먼저 모델에 반영
   syncEditsToModel();
-  m[htmlEditField]=htmlEditTa.value;
+  // 닫히지 않은 태그가 다음 메시지로 새지 않도록 균형을 맞춰 저장
+  m[htmlEditField]=balanceHtmlFragment(htmlEditTa.value);
   closeHtmlModal();
   renderPreview();
   snapshot();
@@ -3160,18 +3224,44 @@ function buildPageCss(forEpub){
 }
 
 /* ---------- export ---------- */
-function exportHtml(){
+async function exportHtml(){
   if(!MESSAGES.length){alert('먼저 파싱하세요.');return;}
   const live=document.getElementById('book').cloneNode(true);
   live.querySelectorAll('.msg-del').forEach(el=>el.remove());
   live.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   live.querySelectorAll('.placeholder').forEach(el=>el.remove());
+  // Blob URL 이미지를 base64 data URI 로 치환 (독립 HTML 파일에서도 이미지가 보이도록).
+  //   같은 blob URL 은 한 번만 변환해 재사용한다.
+  const blobCache=new Map();
+  for(const img of [...live.querySelectorAll('img')]){
+    const src=img.getAttribute('src')||'';
+    if(!/^blob:/.test(src)) continue;
+    try{
+      if(!blobCache.has(src)){
+        const meta=(window.__epubBlobMeta&&window.__epubBlobMeta[src])||null;
+        const res=await fetch(src);
+        const buf=await res.arrayBuffer();
+        const bytes=new Uint8Array(buf);
+        let bin='';
+        for(let i=0;i<bytes.length;i+=32768) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+32768));
+        const mime=(meta&&meta.mime)||((res.headers.get('content-type')||'').split(';')[0])||'image/png';
+        blobCache.set(src, 'data:'+mime+';base64,'+btoa(bin));
+      }
+      img.setAttribute('src', blobCache.get(src));
+    }catch(_){ /* 실패 시 blob URL 유지 */ }
+  }
   const bodyHTML=live.innerHTML;
   const pageCss=buildPageCss();
 
-  const doc='<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n'+
-    '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>채팅 로그</title>\n'+
-    '<style>\n'+pageCss+'\n</style>\n</head>\n<body>\n<div id="book">\n'+bodyHTML+'\n</div>\n</body>\n</html>';
+  let doc;
+  try{
+    doc='<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n'+
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>채팅 로그</title>\n'+
+      '<style>\n'+pageCss+'\n</style>\n</head>\n<body>\n<div id="book">\n'+bodyHTML+'\n</div>\n</body>\n</html>';
+  }catch(err){
+    alert('본문이 너무 커서 하나의 HTML 파일로 만들 수 없습니다(이미지 과다). EPUB 발행을 이용하거나, 이미지 압축 설정을 켜고 다시 시도해 주세요.');
+    return;
+  }
 
   const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
   const a=document.createElement('a');
@@ -3282,6 +3372,61 @@ async function fetchImageB64(url){
 }
 const MIME_EXT={'image/jpeg':'jpg','image/png':'png','image/gif':'gif','image/webp':'webp','image/svg+xml':'svg'};
 
+/* ===== 이미지 축소·재인코딩 (EPUB 내보내기용) =====
+   - 최대 폭(maxW)을 넘는 이미지만 가로 폭을 maxW 로 줄이고 세로는 비율 유지.
+   - GIF/SVG 는 손대지 않는다(애니메이션·벡터 보존).
+   - 형식 옵션: keep(원본 유지) / jpeg / webp. 품질(quality)은 JPEG·WebP 에만 적용.
+   - 실패하거나 축소 불필요 시 원본(mime,b64)을 그대로 반환.                     */
+function loadImageFromDataUri(dataUri){
+  return new Promise((resolve,reject)=>{
+    const im=new Image();
+    im.onload=()=>resolve(im);
+    im.onerror=()=>reject(new Error('이미지 디코드 실패'));
+    im.src=dataUri;
+  });
+}
+function dataUrlToB64(u){ const m=String(u).match(/^data:([^;,]+);base64,(.*)$/); return m?{mime:m[1],b64:m[2]}:null; }
+
+async function processImageForExport(mime, b64, opt){
+  // opt: {on, maxW, format, quality}
+  if(!opt.on) return {mime,b64};
+  // GIF(애니메이션 가능)·SVG(벡터)는 canvas 재인코딩 대상에서 제외 — 원본 유지
+  if(mime==='image/gif' || mime==='image/svg+xml') return {mime,b64};
+  try{
+    const srcUri='data:'+mime+';base64,'+b64;
+    const im=await loadImageFromDataUri(srcUri);
+    const w=im.naturalWidth||im.width, h=im.naturalHeight||im.height;
+    if(!w || !h) return {mime,b64};
+    const needResize = w>opt.maxW;
+    // 형식 결정
+    let outMime;
+    if(opt.format==='jpeg') outMime='image/jpeg';
+    else if(opt.format==='webp') outMime='image/webp';
+    else outMime = mime; // keep
+    // 축소도 필요 없고 형식도 그대로면 원본 유지 (재인코딩으로 오히려 커지는 것 방지)
+    if(!needResize && outMime===mime) return {mime,b64};
+    const scale = needResize ? (opt.maxW/w) : 1;
+    const nw=Math.max(1, Math.round(w*scale));
+    const nh=Math.max(1, Math.round(h*scale));
+    const cv=document.createElement('canvas');
+    cv.width=nw; cv.height=nh;
+    const ctx=cv.getContext('2d');
+    // JPEG 는 알파를 표현 못하므로 흰 배경을 깔아 검게 되는 것 방지
+    if(outMime==='image/jpeg'){ ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,nw,nh); }
+    ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+    ctx.drawImage(im,0,0,nw,nh);
+    const q=(outMime==='image/jpeg'||outMime==='image/webp')?opt.quality:undefined;
+    const outUri = cv.toDataURL(outMime, q);
+    const parsed=dataUrlToB64(outUri);
+    if(!parsed) return {mime,b64};
+    // 재인코딩 결과가 원본보다 크면(작은 PNG 등) 원본을 유지 — 단, 축소가 실제로 있었으면 축소본 사용
+    if(!needResize && parsed.b64.length >= b64.length) return {mime,b64};
+    return parsed;
+  }catch(_){
+    return {mime,b64}; // 실패 시 원본 유지
+  }
+}
+
 async function exportEpub(){
   if(!MESSAGES.length){alert('먼저 파싱하세요.');return;}
   if(typeof JSZip==='undefined'){alert('EPUB 모듈을 사용할 수 없습니다.');return;}
@@ -3298,9 +3443,16 @@ async function exportEpub(){
 
   // 2) 이미지 내장: 본문의 모든 <img> 를 EPUB 내부 파일로 변환하고 src 교체
   st.textContent='이미지 내장 중…';
+  // 이미지 압축(축소·재인코딩) 옵션 읽기
+  const imgOpt={
+    on: document.getElementById('imgResizeOn').checked,
+    maxW: Math.max(200, parseInt(document.getElementById('imgMaxW').value,10)||1600),
+    format: document.getElementById('imgFormat').value||'keep',
+    quality: Math.min(1, Math.max(0.5, parseFloat(document.getElementById('imgQuality').value)||0.9))
+  };
   const imgEls=[...live.querySelectorAll('img')];
   const srcMap=new Map();   // 원본 src -> {file, mime, b64}
-  let seq=0, embedded=0, failed=0;
+  let seq=0, embedded=0, failed=0, compressed=0;
   for(const img of imgEls){
     const src=img.getAttribute('src')||'';
     if(!src) continue;
@@ -3308,13 +3460,37 @@ async function exportEpub(){
     let entry=null;
     const dm=src.match(/^data:([^;,]+);base64,(.*)$/);
     if(dm){
-      const ext=MIME_EXT[dm[1]]||'jpg';
-      entry={file:'img'+(++seq)+'.'+ext, mime:dm[1], b64:dm[2]};
+      // 압축 옵션 적용 (필요 시 축소·재인코딩)
+      const before=dm[2].length;
+      const proc=await processImageForExport(dm[1], dm[2], imgOpt);
+      if(proc.b64.length < before) compressed++;
+      const ext=MIME_EXT[proc.mime]||'jpg';
+      entry={file:'img'+(++seq)+'.'+ext, mime:proc.mime, b64:proc.b64};
+    } else if(/^blob:/.test(src)){
+      // EPUB 불러오기에서 만든 Blob URL → 바이트를 읽어 base64 로 내장
+      try{
+        const meta=(window.__epubBlobMeta&&window.__epubBlobMeta[src])||null;
+        const res=await fetch(src);
+        const buf=await res.arrayBuffer();
+        const bytes=new Uint8Array(buf);
+        let bin='';
+        for(let i=0;i<bytes.length;i+=32768) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+32768));
+        const mime=(meta&&meta.mime)||((res.headers.get('content-type')||'').split(';')[0])||'image/png';
+        const b64=btoa(bin);
+        const before=b64.length;
+        const proc=await processImageForExport(mime, b64, imgOpt);
+        if(proc.b64.length < before) compressed++;
+        const ext=MIME_EXT[proc.mime]||'png';
+        entry={file:'img'+(++seq)+'.'+ext, mime:proc.mime, b64:proc.b64};
+      }catch(err){ failed++; }
     } else if(/^https?:\/\//.test(src)){
       try{
         const r=await fetchImageB64(src);
-        const ext=MIME_EXT[r.mime]||'jpg';
-        entry={file:'img'+(++seq)+'.'+ext, mime:r.mime, b64:r.b64};
+        const before=r.b64.length;
+        const proc=await processImageForExport(r.mime, r.b64, imgOpt);
+        if(proc.b64.length < before) compressed++;
+        const ext=MIME_EXT[proc.mime]||'jpg';
+        entry={file:'img'+(++seq)+'.'+ext, mime:proc.mime, b64:proc.b64};
       }catch(err){ failed++; /* CORS 등 실패 시 원본 URL 유지 */ }
     }
     if(entry){ srcMap.set(src,entry); img.setAttribute('src','images/'+entry.file); embedded++; }
@@ -3410,7 +3586,7 @@ imgItems.join('\n')+(imgItems.length?'\n':'')+
   a.href=URL.createObjectURL(blob);
   a.download=(title.replace(/[\\/:*?"<>|]+/g,'_')||'book')+'.epub';
   a.click();
-  st.textContent='발행 완료 — 이미지 '+embedded+'개 내장'+(failed?(', '+failed+'개는 서버 차단(CORS)으로 원본 URL 유지'):'')+(COVER?', 표지 포함':'');
+  st.textContent='발행 완료 — 이미지 '+embedded+'개 내장'+(compressed?(' (그중 '+compressed+'개 축소·압축)'):'')+(failed?(', '+failed+'개는 서버 차단(CORS)으로 원본 URL 유지'):'')+(COVER?', 표지 포함':'');
 }
 document.getElementById('exportEpubBtn').addEventListener('click',exportEpub);
 </script>
