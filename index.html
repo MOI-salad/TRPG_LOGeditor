@@ -103,8 +103,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .desc-banner{margin:12px 0;text-align:center}
   .desc-banner img{width:100%;height:auto}
   /* 이슈: 검은 배경 배너의 box-shadow(spread) 가 아래 요소를 덮어 가리는 문제.
-     각 블록을 독립 스택 컨텍스트로 만들어, 나중에 오는 형제 요소가 이전 배너의 그림자 위에 그려지도록 한다. */
-  .msg, .desc-banner{position:relative;isolation:isolate;z-index:0}
+     각 블록을 독립 스택 컨텍스트로 만들어, 나중에 오는 형제 요소가 이전 배너의 그림자 위에 그려지도록 한다.
+     position:relative 는 예전처럼 모든 메시지에 준다(삭제 버튼 위치 기준).
+     단, 롤 메시지(.msg-roll)는 롤템플릿이 position:absolute + z-index:-1/-2 로 배경·테두리를 그리므로
+     isolation/z-index 는 주지 않는다 → 레이어가 어긋나지 않게 한다(예전 동작 유지). */
+  .msg, .desc-banner{position:relative}
+  .msg:not(.msg-roll), .desc-banner{isolation:isolate;z-index:0}
   /* 메시지 삭제 X 버튼 */
   .msg-del{position:absolute;top:4px;right:-6px;width:22px;height:22px;border-radius:50%;
     border:1px solid #e0b4b0;background:#fff;color:#9a3b2e;font-size:14px;line-height:1;
@@ -3032,10 +3036,15 @@ document.getElementById('cssFileInput').addEventListener('change',e=>{
   r.onload=()=>{
     const css=r.result;
     // 1) 롤 테이블 CSS 부분 추출 → rollCss 칸에 복원
+    //    이 편집기가 내보낸 CSS 는 /* ---- roll table css ---- */ 마커 뒤에 롤 CSS 가 있다.
+    //    마커가 없는 외부 CSS(룰 시트 등)는 파일 전체를 롤 CSS 로 취급해 칸에 채운다
+    //    → 그래야 EPUB 발행 시 style.css 에 포함된다. (예전엔 마커 없으면 칸이 비어 export 에서 누락됐음)
     const marker='/* ---- roll table css ---- */';
     const mi=css.indexOf(marker);
     if(mi!==-1){
       document.getElementById('rollCss').value=css.slice(mi+marker.length).trim();
+    } else {
+      document.getElementById('rollCss').value=css.trim();
     }
     // 2) #book 의 letter-spacing / --user-font 값 복원
     const book=css.match(/#book\{([^}]*)\}/);
@@ -3205,7 +3214,8 @@ function buildPageCss(forEpub){
   return (
 'body{margin:0;background:#fff;color:#1a1714;line-height:1.5}\n'+
 '#book{'+bookBox+';background:#fff;line-height:1.5;letter-spacing:'+ls+';--av:28px;--avgap:10px;--user-font:'+fam+';--user-lh:'+lh+';--user-lh-narr:'+lhN+'}\n'+
-'.msg{width:100%;padding:3px 0;margin:0;display:block;line-height:1.5;position:relative;isolation:isolate;z-index:0}\n'+
+'.msg{width:100%;padding:3px 0;margin:0;display:block;line-height:1.5;position:relative}\n'+
+'.msg:not(.msg-roll){isolation:isolate;z-index:0}\n'+
 '.msg.msg-general{width:100%}\n'+
 '.msg.msg-general .msg-body, .msg.msg-general .speaker{font-family:var(--user-font)}\n'+
 '.msg .msg-head{overflow:hidden;text-align:left}\n'+
@@ -3432,6 +3442,14 @@ async function exportEpub(){
   if(typeof JSZip==='undefined'){alert('EPUB 모듈을 사용할 수 없습니다.');return;}
   const st=document.getElementById('epubExportStatus');
 
+  // 롤 메시지가 있는데 롤 CSS 칸이 비어 있으면, 롤테이블이 스타일 없이 나온다 → 미리 경고
+  const hasRoll = MESSAGES.some(m=>m && m.isRoll && !m.deleted && !m.isHidden);
+  const rollCssEmpty = !document.getElementById('rollCss').value.trim();
+  if(hasRoll && rollCssEmpty){
+    const go = confirm('롤 테이블 CSS(5번 항목)가 비어 있습니다.\n이대로 발행하면 롤테이블이 스타일 없이(기본 박스 모양으로) 나옵니다.\n\n· "5 · 롤 테이블 CSS"에서 기본 스타일을 고르거나 CSS를 붙여넣은 뒤 발행하는 것을 권장합니다.\n\n그래도 이대로 계속 발행할까요?');
+    if(!go){ st.textContent='발행을 취소했습니다 — 롤 테이블 CSS를 먼저 넣어주세요.'; return; }
+  }
+
   const title=document.getElementById('bookTitle').value.trim()||'채팅 로그';
   const author=document.getElementById('bookAuthor').value.trim()||'Unknown';
 
@@ -3518,7 +3536,6 @@ async function exportEpub(){
 '<rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>\n'+
 '</container>');
   const oebps=zip.folder('OEBPS');
-  oebps.file('style.css',pageCss);
 
   // 내장 이미지 파일 기록 + manifest 항목 준비
   const imgFolder=oebps.folder('images');
@@ -3528,6 +3545,48 @@ async function exportEpub(){
     imgFolder.file(en.file, en.b64, {base64:true});
     imgItems.push('<item id="im'+(++imgId)+'" href="images/'+en.file+'" media-type="'+en.mime+'"/>');
   });
+
+  // 4-1) CSS 안의 외부 이미지(url(...))를 EPUB 내부로 내장하고 경로를 교체한다.
+  //   롤테이블 배경·테두리 등이 imgur 같은 외부 URL 이면 EPUB 리더가 차단해 안 보이므로,
+  //   내려받아 images/ 폴더에 넣고 style.css 의 url() 을 내부 상대경로로 바꾼다.
+  st.textContent='CSS 이미지 내장 중…';
+  let cssEmbedded=0, cssFailed=0;
+  const cssUrlMap=new Map();   // 원본 URL -> images/파일명
+  // url('...'), url("..."), url(...) 모두 매칭. data:/blob: 및 폰트(woff 등)는 제외.
+  const cssUrls=new Set();
+  {
+    const re=/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi;
+    let m;
+    while((m=re.exec(pageCss))!==null){
+      const u=m[2].trim();
+      if(!u) continue;
+      if(/^data:/i.test(u)) continue;              // 이미 인라인
+      if(!/^https?:\/\//i.test(u)) continue;        // 상대경로/기타는 건드리지 않음
+      if(/\.(woff2?|ttf|otf|eot)(\?|$)/i.test(u)) continue; // 폰트는 제외(용량↑, 라이선스)
+      if(/fonts\.googleapis\.com|fonts\.gstatic\.com/i.test(u)) continue; // 웹폰트 CSS 제외
+      cssUrls.add(u);
+    }
+  }
+  for(const url of cssUrls){
+    try{
+      const r=await fetchImageB64(url);          // {mime, b64}
+      // 압축 옵션은 배경/프레임 화질 보존을 위해 적용하지 않음(원본 그대로 내장)
+      const ext=MIME_EXT[r.mime]|| (url.match(/\.([a-z0-9]+)(?:\?|$)/i)?.[1]) || 'png';
+      const file='css'+(++imgId)+'.'+ext;
+      imgFolder.file(file, r.b64, {base64:true});
+      imgItems.push('<item id="im'+imgId+'" href="images/'+file+'" media-type="'+r.mime+'"/>');
+      cssUrlMap.set(url, 'images/'+file);
+      cssEmbedded++;
+    }catch(err){ cssFailed++; /* 실패 시 원본 URL 유지 */ }
+  }
+  // style.css 는 OEBPS 루트에 있고 이미지는 OEBPS/images/ 이므로 상대경로 그대로(images/..) 사용 가능
+  let pageCssFinal=pageCss;
+  cssUrlMap.forEach((rel,orig)=>{
+    // 정확히 그 URL 문자열만 교체 (따옴표 유무 모두 커버)
+    const escOrig=orig.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    pageCssFinal=pageCssFinal.replace(new RegExp(escOrig,'g'), rel);
+  });
+  oebps.file('style.css',pageCssFinal);
 
   // 표지 (선택)
   let coverManifest='', coverMeta='', coverSpine='', coverPage='';
@@ -3586,7 +3645,7 @@ imgItems.join('\n')+(imgItems.length?'\n':'')+
   a.href=URL.createObjectURL(blob);
   a.download=(title.replace(/[\\/:*?"<>|]+/g,'_')||'book')+'.epub';
   a.click();
-  st.textContent='발행 완료 — 이미지 '+embedded+'개 내장'+(compressed?(' (그중 '+compressed+'개 축소·압축)'):'')+(failed?(', '+failed+'개는 서버 차단(CORS)으로 원본 URL 유지'):'')+(COVER?', 표지 포함':'');
+  st.textContent='발행 완료 — 이미지 '+embedded+'개 내장'+(compressed?(' (그중 '+compressed+'개 축소·압축)'):'')+(cssEmbedded?(', CSS 배경이미지 '+cssEmbedded+'개 내장'):'')+((failed||cssFailed)?(', '+(failed+cssFailed)+'개는 서버 차단(CORS)으로 원본 URL 유지'):'')+(COVER?', 표지 포함':'');
 }
 document.getElementById('exportEpubBtn').addEventListener('click',exportEpub);
 </script>
