@@ -116,7 +116,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .toolbar button:hover{background:var(--accent)}
   .toolbar button:disabled{opacity:.4;cursor:default;background:#2e2924}
   .toolbar .sep{width:1px;height:20px;background:#4a4035;margin:0 3px}
-  .toolbar .hint{color:#b8ad9a;font-size:11px;font-family:system-ui,sans-serif;margin-left:auto}
+  /* 좌/우 그룹 분리: 이 스페이서 이후 버튼들은 오른쪽으로 밀린다 */
+  .toolbar .tb-spacer{flex:1 1 auto}
+  /* 안내문은 항상 다음 줄 전체 폭으로 (버튼 정렬을 방해하지 않도록) */
+  .toolbar .hint{color:#b8ad9a;font-size:11px;font-family:system-ui,sans-serif;
+    flex:0 0 100%;text-align:right;margin-top:4px}
   .placeholder{color:#8a8074;text-align:center;padding:80px 20px;font-style:italic}
 
   /* avatar list */
@@ -160,8 +164,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .msg.msg-roll .sheet-rolltemplate-coc{width:100%}
   .divider{width:calc(100% - 10px);margin-left:auto;margin-right:auto;margin-top:6px;margin-bottom:6px;border:none;border-top:1px solid var(--divider)}
   .msg-gap{height:1.6em}
-  .desc-banner{margin:12px 0;text-align:center}
+  .desc-banner{margin:3px 0;padding:3px 0;text-align:center}
   .desc-banner img{width:100%;height:auto}
+  /* emote: 가운데 정렬 연출. 전후 여백은 나레이션 텍스트와 동일하게 맞춤. */
+  .emote-line{margin:3px 0;padding:3px 0;position:relative;text-align:center}
+  .emote-line a{text-decoration:none;display:block}
   /* 이슈: 검은 배경 배너의 box-shadow(spread) 가 아래 요소를 덮어 가리는 문제.
      각 블록을 독립 스택 컨텍스트로 만들어, 나중에 오는 형제 요소가 이전 배너의 그림자 위에 그려지도록 한다.
      position:relative 는 예전처럼 모든 메시지에 준다(삭제 버튼 위치 기준).
@@ -184,6 +191,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .msg-drag:active{cursor:grabbing}
   body.edit-on .msg:hover > .msg-drag,
   body.edit-on .desc-banner:hover > .msg-drag{display:flex}
+  body.edit-on .emote-line:hover > .msg-drag{display:flex}
   /* 드래그 중 표시 */
   .msg.dragging, .desc-banner.dragging{opacity:.4}
   .drop-indicator{height:0;border-top:2px solid var(--accent);margin:0;pointer-events:none}
@@ -195,6 +203,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .toolbar button.active{background:var(--accent);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
   body.edit-on .msg:hover > .msg-del,
   body.edit-on .desc-banner:hover > .msg-del{display:flex}
+  body.edit-on .emote-line:hover > .msg-del{display:flex}
   [contenteditable]:hover{outline:2px dashed var(--accent);outline-offset:2px;cursor:text}
   [contenteditable]:focus{outline:2px solid var(--accent2)}
   /* 큰 편집 창(모달) */
@@ -234,6 +243,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   body.htmledit-on #book .desc-banner{cursor:context-menu}
   body.htmledit-on #book .msg:hover,
   body.htmledit-on #book .desc-banner:hover{outline:2px dashed var(--accent);outline-offset:2px}
+  body.htmledit-on #book .emote-line{cursor:context-menu}
+  body.htmledit-on #book .emote-line:hover{outline:2px dashed var(--accent);outline-offset:2px}
   /* HTML 편집 모드에서는 본문 클릭 편집(점선/커서)을 억제해 우클릭 편집과 혼동되지 않게 함 */
   body.htmledit-on #book [contenteditable]:hover{outline:none;cursor:context-menu}
   .html-modal-win{background:var(--panel);border:2px solid var(--ink);border-radius:8px;
@@ -359,7 +370,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <label style="margin-top:10px">본문 (줄바꿈은 그대로 반영됩니다)</label>
       <textarea id="handoutBody" rows="8" style="font-family:system-ui,sans-serif;white-space:pre-wrap" placeholder=""></textarea>
       <div style="font-size:11px;color:#8a8074;font-family:system-ui,sans-serif;margin-top:6px;line-height:1.5">
-        · 테두리 박스 3단(제목/부제/본문) 형식으로 삽입됩니다. 삽입 후 편집 모드에서 직접 수정할 수도 있습니다.
+        · 테두리 박스 3단(제목/부제/본문) 형식으로 삽입됩니다. 삽입 후 본문 편집 모드에서 직접 수정할 수도 있습니다.
       </div>
     </div>
     <div class="modal-foot">
@@ -492,14 +503,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <button data-cmd="bold"><b>B</b> 볼드</button>
       <button data-cmd="italic"><i>I</i> 이탤릭</button>
       <button data-cmd="br">↵ 줄바꿈</button>
+      <span class="tb-spacer"></span>
+      <button id="toggleEdit">✎ 본문 편집 ON</button>
+      <button id="toggleHtmlEdit">&lt;/&gt; HTML 편집 OFF</button>
       <span class="sep"></span>
-      <button id="toggleEdit">✎ 편집 모드: 켜짐</button>
-      <button id="toggleHtmlEdit">&lt;/&gt; HTML 편집: 꺼짐</button>
-      <span class="sep"></span>
-      <button id="toggleImgInsert" title="켜면 원하는 위치를 클릭해 이미지를 삽입합니다">🖼 이미지 삽입: 꺼짐</button>
-      <button id="toggleHandoutInsert" title="켜면 원하는 위치를 클릭해 핸드아웃을 삽입합니다">📄 핸드아웃 삽입: 꺼짐</button>
+      <button id="toggleImgInsert" title="켜면 원하는 위치를 클릭해 이미지를 삽입합니다">🖼 이미지 삽입 OFF</button>
+      <button id="toggleHandoutInsert" title="켜면 원하는 위치를 클릭해 핸드아웃을 삽입합니다">📄 핸드아웃 삽입 OFF</button>
       <span class="hint">이미지/핸드아웃 삽입을 켜면 원하는 위치를 클릭해 나레이션으로 삽입합니다 (Esc로 취소).</span>
     </div>
+    <style id="liveDiceCss"></style>
     <style id="liveRollCss"></style>
     <style id="liveUserCss"></style>
     <div id="book"><div class="placeholder">왼쪽에 HTML을 입력하고 “파싱 / 미리보기”를 누르세요.</div></div>
@@ -2344,6 +2356,92 @@ function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 let MESSAGES = [];
 let AVATARS = [];
 
+/* ---------- 기본 내장 주사위 굴림 CSS ----------
+   세션 로그 변환 시 항상 자동 포함되는 '단독' 인라인 주사위/굴림 결과 스타일.
+   모든 선택자를 .msg-body 하위로 한정한다 → 룰 CSS 롤테이블(.roll-body 안의
+   .sheet-rolltemplate-*)의 결과값에는 적용되지 않는다. (스크린샷 이슈 해결)
+   '기본 제공 스타일' 프리셋 목록에는 노출하지 않고, 미리보기·내보내기에 늘 적용된다. */
+const DEFAULT_DICE_CSS = `
+/* Target the inline roll box */
+.msg-body .inlinerollresult.showtip.tipsy-n-right {
+    background-color: #ffeb3b;
+    border: 2px solid #333;
+    border-radius: 4px;
+    padding: 0 4px;
+    font-weight: bold;
+    cursor: help;
+}
+/* Customize critical successes */
+.msg-body .inlinerollresult.showtip.tipsy-n-right.fullcrit { border: 2px solid green; }
+/* Customize critical failures */
+.msg-body .inlinerollresult.showtip.tipsy-n-right.fullfail { border: 2px solid red; }
+/* Base formula and rolling text styling */
+.msg-body .formula { margin-bottom: 3px; font-weight: bold; }
+/* Float clearer to keep lines structured */
+.msg-body .clear { clear: both; }
+/* Overall container for the math operation block */
+.msg-body .formattedformula { display: inline-flex; align-items: center; gap: 5px; }
+/* Individual die wrapper */
+.msg-body .dicegrouping { display: inline-block; }
+/* The visual die icon block */
+.msg-body .diceroll { display: inline-block; width: 24px; height: 24px; position: relative; text-align: center; }
+/* Die shape background */
+.msg-body .diceroll .backing { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
+/* The actual number displayed on the die */
+.msg-body .didroll { position: relative; z-index: 2; line-height: 24px; }
+/* The equals sign connecting formula to final answer */
+.msg-body .formula strong { margin: 0 5px; }
+/* The final rolled sum or result */
+.msg-body .rolled { font-weight: bold; font-size: 1.1em; }
+/* Hidden flyout menu container */
+.msg-body .flyout { display: none; }
+
+/* Roll20 주사위 굴림 결과 스타일 */
+.msg-body .formula { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #000000; line-height: 1.4; }
+.msg-body .formula.formattedformula { font-size: 14px; }
+/* "rolling 1d20" 라벨 */
+.msg-body .formula[style] { margin-bottom: 3px; }
+.msg-body .clear { clear: both; }
+/* 괄호로 묶인 주사위 그룹 */
+.msg-body .dicegrouping { display: inline-block; color: #888; }
+/* 개별 주사위 굴림 값 */
+.msg-body .diceroll { display: inline-block; position: relative; margin: 0 1px; }
+.msg-body .diceroll .dicon { position: relative; }
+.msg-body .diceroll .didroll { position: relative; z-index: 1; font-weight: normal; color: #000000; padding: 2px 4px; }
+/* 크리티컬 성공 (최댓값 = 초록) */
+.msg-body .diceroll.critsuccess .didroll { color: #3b6d11; font-weight: bold; }
+/* 크리티컬 실패 (최솟값 = 빨강) */
+.msg-body .diceroll.critfail .didroll { color: #a32d2d; font-weight: bold; }
+/* 등호 */
+.msg-body .formula strong { margin: 0 4px; font-weight: bold; color: #000000; }
+/* 최종 합계 결과 */
+.msg-body .rolled { display: inline-block; font-size: 16px; font-weight: normal; color: #000000; }
+.msg-body .flyout { display: none; }
+`;
+
+/* ---------- emote <a> 스타일 정리 ----------
+   emote 의 <a> 인라인 스타일에서 margin/padding 을 지정된 고정값으로 교체하고,
+   color·font-size·line-height 등 나머지는 보존한다. 정렬은 컨테이너에서 처리한다. */
+function sanitizeEmoteStyle(style){
+  // ';' 기준으로 선언 분리 후, margin/padding 계열 속성은 버리고(아래에서 고정값으로 재추가)
+  const decls = String(style).split(';');
+  const kept = [];
+  decls.forEach(d=>{
+    const t = d.trim();
+    if(!t) return;
+    const prop = t.split(':')[0].trim().toLowerCase();
+    // 기존 margin/padding 은 제거하고 고정값으로 교체한다
+    if(/^margin(-|$)/.test(prop) || /^padding(-|$)/.test(prop)) return;
+    // text-align 은 컨테이너에서 통일하므로 제거
+    if(prop==='text-align') return;
+    kept.push(t);
+  });
+  // desc 와 동일한 여백값을 부여 (요청값)
+  kept.push('padding: 9px 11px 7px');
+  kept.push('margin: -9px -11px -7px -16px');
+  return kept.join(' ; ');
+}
+
 /* ---------- chapter banner padding transform (rule 7) ----------
    검정 배경 + box-shadow 를 가진 desc 배너의 <a> 요소들에 대해서만
    padding 값을 교체한다. 문자열 단위로 처리하여 다른 desc(예: padding:2px 본문)
@@ -2423,9 +2521,15 @@ function parseEdited(doc){
   Array.from(root.children).forEach(node=>{
     if(node.classList && node.classList.contains('desc-banner')){
       const clone=node.cloneNode(true);
-      clone.querySelectorAll('.msg-del').forEach(n=>n.remove());
+      clone.querySelectorAll('.msg-del,.msg-drag').forEach(n=>n.remove());
       out.push({type:'desc', isHidden:false, rawHTML: clone.innerHTML.trim()});
       carrySpeaker=''; carryAvatar=''; carryNarr=false; // 배너를 만나면 연속성 끊김
+      return;
+    }
+    if(node.classList && node.classList.contains('emote-line')){
+      const clone=node.cloneNode(true);
+      clone.querySelectorAll('.msg-del,.msg-drag').forEach(n=>n.remove());
+      out.push({type:'emote', isHidden:false, rawHTML: clone.innerHTML.trim()});
       return;
     }
     if(!node.classList || !node.classList.contains('msg')) return; // hr.divider, msg-gap 등
@@ -2484,12 +2588,24 @@ function parseRoll20(doc){
   msgNodes.forEach(node=>{
     const cls = node.className || '';
     const isDesc = /\bdesc\b/.test(cls);
+    // emote 메시지: /emote(/em) 로 생성됨. <a> 인라인 스타일(정렬·여백·색상 등)을 그대로 보존해야 함.
+    const isEmote = /\bemote\b/.test(cls);
     // 형식 B 에서는 'general' 또는 'msg' 가 일반 메시지를 의미
-    const isGeneral = /\bgeneral\b/.test(cls) || (/\bmsg\b/.test(cls) && !isDesc);
+    const isGeneral = /\bgeneral\b/.test(cls) || (/\bmsg\b/.test(cls) && !isDesc && !isEmote);
     // 귓속말 메시지: class 에 whisper(또는 private) 포함
     const isWhisper = /\bwhisper\b/.test(cls) || /\bprivate\b/.test(cls);
     const byEl = node.querySelector('.by');
     let speaker = byEl ? byEl.textContent.replace(/\s*:\s*$/,'').trim() : '';
+    // 일부 로그(GM)는 나레이션의 이름표 자리에 특수 아이콘 문자(사설 사용 영역, PUA)를 넣는다.
+    //   예: <span class="by"></span>  → 실제 이름이 아니라 '나레이션 마커'.
+    //   이름표가 PUA/기호 문자만으로 이뤄져 있고 아바타 이미지도 없으면 나레이션으로 간주(빈 이름 처리).
+    const avImgForName = node.querySelector('.avatar img');
+    if(speaker && !avImgForName){
+      // 문자 중 '의미 있는 글자'(한글/영문/숫자/일반 문장부호)가 하나도 없고 전부 PUA·기호면 나레이션 마커로 본다
+      const meaningful = /[0-9A-Za-z\uAC00-\uD7A3\u3131-\u318E\u4E00-\u9FFF\u3040-\u30FF]/.test(speaker);
+      const hasPUA = /[\uE000-\uF8FF]/.test(speaker) || /[\uDB80-\uDBBF][\uDC00-\uDFFF]/.test(speaker); // 기본 PUA + 보충 PUA(surrogate)
+      if(!meaningful && hasPUA){ speaker=''; }
+    }
     // 귓속말이면 by 는 "(To GM)" / "(From X)" 형태 → 대상 추출 후 "보낸이 to 대상" 으로 재구성
     let whisper = false;
     if(isWhisper && byEl){
@@ -2527,15 +2643,46 @@ function parseRoll20(doc){
       carrySpeaker=''; carryAvatar=''; carryNarr=false; // 배너를 만나면 연속성 끊김
       return;
     }
+    if(isEmote){
+      // emote 의 <a> 인라인 스타일에는 Roll20 아바타 자리를 상쇄하려는 음수 마진
+      //   (예: margin: -9px -11px -7px -46px)이 들어있다. 이 에디터엔 그 아바타 여백이 없어
+      //   음수 마진이 그대로 적용되면 왼쪽으로 넘쳐 잘린다. → 마진/좌우 패딩을 제거하고
+      //   색상·글자크기 등 나머지 인라인 스타일은 보존한다. 정렬은 컨테이너(.emote-line)에서 처리.
+      const clone = node.cloneNode(true);
+      clone.querySelectorAll('.spacer,.avatar,.tstamp,.flyout').forEach(n=>n.remove());
+      clone.querySelectorAll('a[style]').forEach(a=>{
+        a.setAttribute('style', sanitizeEmoteStyle(a.getAttribute('style')||''));
+      });
+      out.push({type:'emote', isHidden, rawHTML: clone.innerHTML.trim()});
+      // emote 는 나레이션과 유사한 연출 → carry(직전 화자 연속성)는 건드리지 않는다
+      return;
+    }
 
-    // 화자명(by)·아바타가 전혀 없는 일반 메시지 = 같은 화자의 다음 줄(연속 줄).
-    //   Roll20 은 같은 사람이 연속 발화하면 두 번째 줄부터 by/avatar 를 생략한다.
-    //   → 직전 화자/아바타를 물려받아 병합 단계에서 앞 메시지에 이어붙인다.
-    const isBareContinuation = isGeneral && !roll && !byEl && !avImg && !byEmpty;
-    if(isBareContinuation && carrySpeaker){
+    // Roll20 은 "직전 메시지와 작성자가 같으면" by/아바타를 생략한다.
+    //   → by·아바타가 모두 없는 메시지(롤 포함)는 직전 메시지의 성격을 물려받는다.
+    const lacksOwnHeader = !byEl && !avImg && !byEmpty && !roll;  // 헤더 정보가 전혀 없는 일반 줄
+    const rollLacksHeader = !byEl && !avImg && !byEmpty && !!roll; // 헤더 없는 롤
+    let inheritedNarr = false;   // 이 줄이 나레이션을 물려받았는지
+    if(lacksOwnHeader){
+      if(carryNarr){
+        // 직전이 나레이션이면, 이어지는 헤더 없는 줄도 나레이션으로 취급 (desc 이후 포함)
+        inheritedNarr = true;
+      } else if(carrySpeaker){
+        // 직전이 실제 화자였다면 그 화자의 이어지는 대사
+        speaker = carrySpeaker;
+        avatar  = carryAvatar;
+      } else {
+        // 물려받을 대상이 전혀 없는 헤더 없는 줄(desc 직후 첫 줄 등) → 나레이션으로 취급
+        inheritedNarr = true;
+      }
+    } else if(rollLacksHeader && carrySpeaker){
+      // 헤더 없는 롤은 직전 화자를 물려받아 롤 헤더에 이름·아바타를 표시 (버그1)
       speaker = carrySpeaker;
       avatar  = carryAvatar;
     }
+    // 최종 나레이션 여부: 명시적 byEmpty 이거나, 위에서 나레이션을 물려받은 경우
+    const effByEmpty = byEmpty || inheritedNarr;
+    const isBareContinuation = lacksOwnHeader && !inheritedNarr && !!carrySpeaker;
 
     if(avatar && !avatarMap.has(avatar)) avatarMap.set(avatar, speaker || '(이름 없음)');
 
@@ -2544,17 +2691,22 @@ function parseRoll20(doc){
     let bodyHTML = clone.innerHTML.trim();
     out.push({
       type: isGeneral?'general':'other',
-      isHidden, speaker, avatar, byEmpty,
+      isHidden, speaker, avatar, byEmpty: effByEmpty,
       isRoll: !!roll, rollHTML: roll?roll.outerHTML:'',
       bodyHTML, whisper,
-      // 연속 줄 표시: 화자가 같으면 아바타 유무가 달라도 병합되도록 함
-      continuation: !!(isBareContinuation && carrySpeaker)
+      continuation: !!isBareContinuation
     });
 
-    // 다음 연속 줄이 물려받을 화자/아바타 갱신
-    if(roll){ carrySpeaker=''; carryAvatar=''; carryNarr=false; }
-    else if(byEmpty){ carrySpeaker=''; carryAvatar=''; carryNarr=true; }
-    else if(isGeneral && speaker){ carrySpeaker=speaker; carryAvatar=avatar; carryNarr=false; }
+    // 다음 줄이 물려받을 상태(carry) 갱신
+    //  - 나레이션(명시 byEmpty 또는 물려받은 나레이션): 나레이션 연속 상태로 표시
+    //  - 롤/일반 대사: 확정된 speaker/avatar 로 carry 갱신
+    if(effByEmpty){
+      carryNarr = true;               // 나레이션 연속 (화자 없음)
+      carrySpeaker=''; carryAvatar='';
+    } else if(speaker || avatar){
+      carrySpeaker=speaker; carryAvatar=avatar; carryNarr=false;
+    }
+    // (그 외: 정보 없는 줄 — carry 유지)
   });
 
   rebuildSpeakers(out, avatarMap);
@@ -2668,6 +2820,13 @@ function buildBook(forExport){
       // 닫히지 않은 태그가 배너 밖(다음 메시지)으로 새는 것을 막기 위해 균형을 맞춘다.
       const safeRaw = (typeof balanceHtmlFragment==='function') ? balanceHtmlFragment(m.rawHTML||'') : (m.rawHTML||'');
       html += '<div class="desc-banner"'+dataIdx+'>'+delBtn+safeRaw+'</div>';
+      return;
+    }
+    if(m.type==='emote'){
+      // emote 도 <a> 인라인 스타일(text-align/margin/color 등)을 그대로 보존해야 하므로
+      // desc 와 마찬가지로 원본 HTML 을 손대지 않고 렌더한다.
+      const safeRaw = (typeof balanceHtmlFragment==='function') ? balanceHtmlFragment(m.rawHTML||'') : (m.rawHTML||'');
+      html += '<div class="emote-line"'+dataIdx+'>'+delBtn+safeRaw+'</div>';
       return;
     }
     const isTurnStart = !!(m.speaker || m.avatar || m.byEmpty);
@@ -3382,7 +3541,11 @@ document.getElementById('applyAvatar').addEventListener('click',()=>{
   snapshot();
 });
 
-function applyRollCss(){document.getElementById('liveRollCss').textContent=document.getElementById('rollCss').value;}
+function applyRollCss(){
+  // 내장 주사위 CSS 를 항상 먼저 적용하고, 사용자 롤 CSS 를 그 뒤에 적용(사용자 값이 우선)
+  const dice=document.getElementById('liveDiceCss'); if(dice) dice.textContent=DEFAULT_DICE_CSS;
+  document.getElementById('liveRollCss').textContent=document.getElementById('rollCss').value;
+}
 document.getElementById('applyCss').addEventListener('click',applyRollCss);
 applyRollCss();
 applyTextStyle();
@@ -3453,7 +3616,7 @@ document.getElementById('toggleEdit').addEventListener('click',function(){
   editOn=!editOn;
   document.querySelectorAll('#book [contenteditable]').forEach(el=>el.setAttribute('contenteditable',editOn?'true':'false'));
   document.body.classList.toggle('edit-on',editOn);
-  this.textContent=editOn?'✎ 편집 모드: 켜짐':'✎ 편집 모드: 꺼짐';
+  this.textContent=editOn?'✎ 본문 편집 ON':'✎ 본문 편집 OFF';
 });
 
 /* ===== 메시지별 HTML 직접 편집 (우클릭) ===== */
@@ -3466,13 +3629,14 @@ const htmlEditTa=document.getElementById('htmlEditTa');
 document.getElementById('toggleHtmlEdit').addEventListener('click',function(){
   htmlEditOn=!htmlEditOn;
   document.body.classList.toggle('htmledit-on',htmlEditOn);
-  this.textContent=htmlEditOn?'</> HTML 편집: 켜짐':'</> HTML 편집: 꺼짐';
+  this.textContent=htmlEditOn?'</> HTML 편집 ON':'</> HTML 편집 OFF';
 });
 
 /* 편집 대상 필드/내용 판별 */
 function pickHtmlField(m){
   if(!m) return null;
   if(m.type==='desc') return {field:'rawHTML', label:'desc 배너', value:m.rawHTML||''};
+  if(m.type==='emote') return {field:'rawHTML', label:'emote', value:m.rawHTML||''};
   if(m.isRoll)        return {field:'rollHTML', label:'롤 결과', value:m.rollHTML||''};
   return {field:'bodyHTML', label:'메시지 본문', value:m.bodyHTML||''};
 }
@@ -3517,7 +3681,7 @@ function applyHtmlModal(){
 /* 우클릭: HTML 편집 모드가 켜져 있을 때만 팝업을 연다 */
 document.getElementById('book').addEventListener('contextmenu',e=>{
   if(htmlEditOn){
-    const node=e.target.closest('.msg[data-idx], .desc-banner[data-idx]');
+    const node=e.target.closest('.msg[data-idx], .desc-banner[data-idx], .emote-line[data-idx]');
     if(!node) return;
     e.preventDefault();
     openHtmlModal(+node.dataset.idx);
@@ -3573,8 +3737,8 @@ function setInsertMode(mode){
   document.body.classList.toggle('insert-mode', !!insertMode);
   imgToggleBtn.classList.toggle('active', insertMode==='image');
   handoutToggleBtn.classList.toggle('active', insertMode==='handout');
-  imgToggleBtn.textContent = '🖼 이미지 삽입: '+(insertMode==='image'?'켜짐':'꺼짐');
-  handoutToggleBtn.textContent = '📄 핸드아웃 삽입: '+(insertMode==='handout'?'켜짐':'꺼짐');
+  imgToggleBtn.textContent = '🖼 이미지 삽입 '+(insertMode==='image'?'ON':'OFF');
+  handoutToggleBtn.textContent = '📄 핸드아웃 삽입 '+(insertMode==='handout'?'ON':'OFF');
   if(!insertMode) removeInsertBar();
 }
 imgToggleBtn.addEventListener('click',()=>setInsertMode('image'));
@@ -3777,8 +3941,11 @@ function buildPageCss(forEpub){
 '.msg.msg-roll .sheet-rolltemplate-coc{width:100%}\n'+
 '.divider{width:calc(100% - 10px);margin-left:auto;margin-right:auto;margin-top:6px;margin-bottom:6px;border:none;border-top:1px solid #d5d7de}\n'+
 '.msg-gap{height:1.6em}\n'+
-'.desc-banner{margin:12px 0;text-align:center;position:relative;isolation:isolate;z-index:0}\n'+
+'.desc-banner{margin:3px 0;padding:3px 0;text-align:center;position:relative;isolation:isolate;z-index:0}\n'+
 '.desc-banner img{width:100%;height:auto}\n'+
+'.emote-line{margin:3px 0;padding:3px 0;position:relative;isolation:isolate;z-index:0;text-align:center}\n'+
+'.emote-line a{text-decoration:none;display:block}\n'+
+'/* ---- 기본 내장 주사위 굴림 CSS ---- */\n'+DEFAULT_DICE_CSS+'\n'+
 '/* ---- roll table css ---- */\n'+rollCss+mobileRule);
 }
 
@@ -4004,7 +4171,7 @@ async function exportEpub(){
 
   // 1) 미리보기 본문에서 편집 결과 추출 (HTML 다운로드와 동일한 정제)
   const live=document.getElementById('book').cloneNode(true);
-  live.querySelectorAll('.msg-del').forEach(el=>el.remove());
+  live.querySelectorAll('.msg-del,.msg-drag,.insert-bar,.drop-indicator').forEach(el=>el.remove());
   live.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   live.querySelectorAll('.placeholder').forEach(el=>el.remove());
 
