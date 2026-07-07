@@ -216,6 +216,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   body.edit-on .emote-line:hover > .msg-del{display:flex}
   [contenteditable]:hover{outline:2px dashed var(--accent);outline-offset:2px;cursor:text}
   [contenteditable]:focus{outline:2px solid var(--accent2)}
+  /* Shift+클릭 블록 범위 선택 (일괄 삭제용) */
+  #book .blk-selected{background:rgba(122,91,58,.16);box-shadow:inset 0 0 0 2px rgba(122,91,58,.55);border-radius:4px}
+  #book .blk-selected.msg-narration, #book .blk-selected .msg-body{background:transparent}
   /* 큰 편집 창(모달) */
   .modal-overlay{position:fixed;inset:0;background:rgba(20,17,14,.55);z-index:1000;display:none;
     align-items:center;justify-content:center}
@@ -501,7 +504,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
     <input type="file" id="coverInput" accept="image/*" style="display:none">
     <div id="coverStatus" style="font-size:11px;color:#8a8074;font-family:system-ui,sans-serif;margin-top:2px"></div>
-    <button class="btn go" id="exportEpubBtn" style="margin-top:8px">EPUB 발행</button>
+    <button class="btn go" id="exportEpubBtn" style="margin-top:8px">EPUB 발행 (전자책 다운로드)</button>
     <div id="epubExportStatus" style="font-size:11px;color:#8a8074;font-family:system-ui,sans-serif;margin-top:4px"></div>
     <button class="btn alt" id="exportBtn" style="margin-top:8px;width:100%">수정된 HTML 다운로드</button>
     <button class="btn alt" id="copyHtmlBtn" style="margin-top:8px;width:100%">수정된 HTML 복사</button>
@@ -518,7 +521,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <button data-cmd="italic"><i>I</i> 이탤릭</button>
       <button data-cmd="br">↵ 줄바꿈</button>
       <span class="tb-spacer"></span>
-      <button id="toggleEdit" class="tb-toggle active" title="미리보기에서 텍스트를 클릭해 바로 수정합니다">
+      <button id="toggleEdit" class="tb-toggle active" title="미리보기에서 텍스트를 클릭해 바로 수정합니다. Shift+클릭으로 여러 블록을 선택한 뒤 Delete 키로 한꺼번에 삭제할 수 있습니다.">
         <svg class="tb-ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><g><path d="M5,19H9.414L23.057,5.357a3.125,3.125,0,0,0,0-4.414,3.194,3.194,0,0,0-4.414,0L5,14.586Zm2-3.586L20.057,2.357a1.148,1.148,0,0,1,1.586,0,1.123,1.123,0,0,1,0,1.586L8.586,17H7Z"/><path d="M23.621,7.622,22,9.243V16H16v6H2V3A1,1,0,0,1,3,2H14.758L16.379.379A5.013,5.013,0,0,1,16.84,0H3A3,3,0,0,0,0,3V24H18.414L24,18.414V7.161A5.15,5.15,0,0,1,23.621,7.622ZM18,21.586V18h3.586Z"/></g></svg>
         <span>본문 편집</span>
       </button>
@@ -2606,8 +2609,10 @@ function parseRoll20(doc){
 
   // 화자명 없는 연속 줄을 직전 화자에게 귀속시키기 위한 캐리 상태
   let carrySpeaker='', carryAvatar='', carryNarr=false;
+  // 직전 최상위 노드가 desc/emote(장면 구분 연출)였는지 — 장면 전환 뒤의 나레이션 오귀속 방지에 사용
+  let prevWasDescEmote=false;
 
-  msgNodes.forEach(node=>{
+  msgNodes.forEach((node, nodeIdx)=>{
     const cls = node.className || '';
     const isDesc = /\bdesc\b/.test(cls);
     // emote 메시지: /emote(/em) 로 생성됨. <a> 인라인 스타일(정렬·여백·색상 등)을 그대로 보존해야 함.
@@ -2662,7 +2667,10 @@ function parseRoll20(doc){
       const clone = node.cloneNode(true);
       clone.querySelectorAll('.spacer,.flyout').forEach(n=>n.remove());
       out.push({type:'desc', isHidden, rawHTML: transformChapterBanner(clone.innerHTML.trim())});
-      carrySpeaker=''; carryAvatar=''; carryNarr=false; // 배너를 만나면 연속성 끊김
+      // desc(챕터 배너)는 '화자 전환'이 아니라 장면 구분 연출이다. Roll20 은 desc 를 사이에 두고도
+      // 같은 캐릭터가 이어 말하면 by/아바타를 생략하므로, carry(직전 화자)를 끊지 않는다.
+      // (끊으면 desc 직후 같은 캐릭터의 맨몸 줄이 화자를 잃고 나레이션으로 오인됨 → 헤더 누락 버그)
+      prevWasDescEmote=true;
       return;
     }
     if(isEmote){
@@ -2677,6 +2685,7 @@ function parseRoll20(doc){
       });
       out.push({type:'emote', isHidden, rawHTML: clone.innerHTML.trim()});
       // emote 는 나레이션과 유사한 연출 → carry(직전 화자 연속성)는 건드리지 않는다
+      prevWasDescEmote=true;
       return;
     }
 
@@ -2684,9 +2693,62 @@ function parseRoll20(doc){
     //   → by·아바타가 모두 없는 메시지(롤 포함)는 직전 메시지의 성격을 물려받는다.
     const lacksOwnHeader = !byEl && !avImg && !byEmpty && !roll;  // 헤더 정보가 전혀 없는 일반 줄
     const rollLacksHeader = !byEl && !avImg && !byEmpty && !!roll; // 헤더 없는 롤
+    // ── 헤더 위치 변종 대응: 나레이션 turn 이 '본문 줄 먼저, 헤더(빈 by) 나중' 순서로
+    //    쪼개져 나오는 로그가 있다(같은 data-messageid 를 공유). 이때 앞의 '헤더 없는 줄'은
+    //    직전 화자가 아니라 같은 그룹(같은 messageid) 뒷줄의 성격(나레이션/화자)을 따라야 한다.
+    //    ※ '바로 다음이 나레이션이면 무조건 나레이션'으로 넓히면, 별개의 나레이션 turn 앞에 있는
+    //      '같은 화자의 정상 연속 줄'까지 오분류되므로, 반드시 같은 messageid 그룹으로 한정한다.
+    const myMsgId = node.getAttribute && node.getAttribute('data-messageid');
+    let groupNarrAhead = false;    // 같은 messageid 그룹의 뒷줄이 나레이션인가
+    let groupSpeakerAhead = '';    // 같은 그룹의 뒷줄이 가진 실제 화자(있으면)
+    let groupAvatarAhead = '';
+    if(lacksOwnHeader && myMsgId){
+      for(let j=nodeIdx+1;j<msgNodes.length;j++){
+        const nx=msgNodes[j];
+        if((nx.getAttribute && nx.getAttribute('data-messageid'))!==myMsgId) break; // 그룹 종료
+        const nxBy=nx.querySelector('.by');
+        const nxAv=nx.querySelector('.avatar img');
+        const nxByEmpty=(!!nxBy && nxBy.textContent.replace(/\s*:\s*$/,'').trim()==='');
+        if(nxByEmpty){ groupNarrAhead=true; break; }
+        if(nxBy){
+          const nm=nxBy.textContent.replace(/\s*:\s*$/,'').trim();
+          if(nm){ groupSpeakerAhead=nm; groupAvatarAhead=nxAv?nxAv.getAttribute('src'):''; break; }
+        }
+      }
+    }
+    // ── 인접 나레이션 판정(messageid 무관) ───────────────────────────
+    // 로그에 따라 나레이션 turn 의 각 줄이 서로 다른 messageid 를 갖기도 한다. 이때 위의
+    // '같은 messageid' 검사만으로는 앞의 헤더 없는 줄을 나레이션에 붙이지 못한다.
+    // → '바로 다음' 메시지 노드가 나레이션(빈 by, desc/emote 아님)이면, 이 헤더 없는 앞줄도
+    //   그 나레이션 turn 의 일부로 본다. (직전 화자의 정상 연속 줄은 다음 줄이 나레이션이 아니라
+    //   같은 화자 줄이거나 turn 이 바뀌므로 이 조건에 걸리지 않는다.)
+    let nextIsNarration = false;
+    // 직전이 desc/emote(장면 구분) 였을 때만 이 규칙을 적용한다.
+    // → 화자의 '직접 연속 줄' (바로 앞이 그 화자였던 경우)은 여기에 걸리지 않으므로
+    //   정상 연속 대사가 나레이션으로 잘못 바뀌는 일이 없다.
+    if(lacksOwnHeader && prevWasDescEmote && !groupNarrAhead && !groupSpeakerAhead){
+      const nx = msgNodes[nodeIdx+1];
+      if(nx){
+        const nxCls = nx.className || '';
+        const isNxDescEmote = /\bdesc\b/.test(nxCls) || /\bemote\b/.test(nxCls);
+        const nxBy = nx.querySelector('.by');
+        const nxByEmpty = (!!nxBy && nxBy.textContent.replace(/\s*:\s*$/,'').trim()==='') || /\bch-공백\b/.test(nxCls);
+        if(!isNxDescEmote && nxByEmpty) nextIsNarration = true;
+      }
+    }
     let inheritedNarr = false;   // 이 줄이 나레이션을 물려받았는지
     if(lacksOwnHeader){
-      if(carryNarr){
+      if(groupNarrAhead){
+        // 같은 messageid 그룹의 뒷줄이 나레이션 → 이 앞줄도 나레이션 (직전 화자 상속 금지)
+        inheritedNarr = true;
+      } else if(groupSpeakerAhead){
+        // 같은 그룹의 뒷줄이 실제 화자 → 그 화자에게 귀속
+        speaker = groupSpeakerAhead;
+        avatar  = groupAvatarAhead;
+      } else if(nextIsNarration){
+        // 바로 다음 줄이 나레이션 → 이 헤더 없는 앞줄도 나레이션 turn 의 시작부
+        inheritedNarr = true;
+      } else if(carryNarr){
         // 직전이 나레이션이면, 이어지는 헤더 없는 줄도 나레이션으로 취급 (desc 이후 포함)
         inheritedNarr = true;
       } else if(carrySpeaker){
@@ -2729,6 +2791,7 @@ function parseRoll20(doc){
       carrySpeaker=speaker; carryAvatar=avatar; carryNarr=false;
     }
     // (그 외: 정보 없는 줄 — carry 유지)
+    prevWasDescEmote=false;   // 일반/롤/나레이션 줄을 처리했으므로 장면구분 직후 상태 해제
   });
 
   rebuildSpeakers(out, avatarMap);
@@ -2823,10 +2886,25 @@ function buildBook(forExport){
   let lastSpeaker = null;
   let narrationMode = false;   // byEmpty 메시지부터 다음 화자 헤더 전까지 내레이션 연속 처리
   let lastWasNarration = false; // 직전 turn 이 내레이션이었는지 (divider vs 공백 판단용)
+  let suppressSep = false;      // 직전 블록이 desc/emote/삽입물이면 다음 대사 앞 가름선·공백 생략
   let prevHeaderSpeaker = null;      // (구) — 미사용
   let lastWasNarrationHeader = false; // (구) — 미사용
   let lastRenderedSpeaker = null;    // 직전에 실제로 렌더된 (내레이션 아닌) 화자. 내레이션을 지나면 null.
   let html = '';
+  // 블록 간 간격(갭) 판정용 — 직전에 렌더된 블록의 종류.
+  //   'general'   : 일반 화자 대사(롤 포함)
+  //   'narration' : 나레이션
+  //   'descemote' : desc 배너 / emote 연출
+  //   null        : 아직 아무 블록도 렌더 안 됨
+  let prevBlockType = null;
+  // 서로 다른 종류의 블록이 인접하면 그 사이에 갭을 넣는다.
+  //  - 일반 화자 ↔ 나레이션
+  //  - 일반 화자 ↔ desc/emote
+  //  - desc/emote ↔ 나레이션
+  // (같은 종류끼리는 갭 없음 — 대사 구분선/공백은 별도 로직)
+  function gapBetween(prev, cur){
+    return prev!==null && prev!==cur;
+  }
 
   MESSAGES.forEach((m,idx)=>{
     if(m.deleted) return;
@@ -2840,15 +2918,23 @@ function buildBook(forExport){
       // desc 배너는 인라인 스타일(padding/box-shadow 등)을 그대로 보존하기 위해
       // contenteditable을 적용하지 않는다 → 브라우저 style 재직렬화로 인한 변형 방지
       // 닫히지 않은 태그가 배너 밖(다음 메시지)으로 새는 것을 막기 위해 균형을 맞춘다.
+      if(gapBetween(prevBlockType,'descemote')) html += '<div class="msg-gap"></div>';
       const safeRaw = (typeof balanceHtmlFragment==='function') ? balanceHtmlFragment(m.rawHTML||'') : (m.rawHTML||'');
       html += '<div class="desc-banner"'+dataIdx+'>'+delBtn+safeRaw+'</div>';
+      lastRenderedSpeaker = null;  // 배너를 지나면 연속성 끊김 → 다음 동일 화자도 헤더 재출력
+      suppressSep = true;          // 배너 직후 첫 캐릭터 대사엔 가름선 생략
+      prevBlockType = 'descemote';
       return;
     }
     if(m.type==='emote'){
       // emote 도 <a> 인라인 스타일(text-align/margin/color 등)을 그대로 보존해야 하므로
       // desc 와 마찬가지로 원본 HTML 을 손대지 않고 렌더한다.
+      if(gapBetween(prevBlockType,'descemote')) html += '<div class="msg-gap"></div>';
       const safeRaw = (typeof balanceHtmlFragment==='function') ? balanceHtmlFragment(m.rawHTML||'') : (m.rawHTML||'');
       html += '<div class="emote-line"'+dataIdx+'>'+delBtn+safeRaw+'</div>';
+      lastRenderedSpeaker = null;  // emote 블록을 지나면 다음 동일 화자도 헤더 재출력
+      suppressSep = true;          // emote 직후 첫 캐릭터 대사엔 가름선 생략
+      prevBlockType = 'descemote';
       return;
     }
     const isTurnStart = !!(m.speaker || m.avatar || m.byEmpty);
@@ -2864,17 +2950,27 @@ function buildBook(forExport){
     const isNarration = !m.isRoll && narrationMode;
 
     const effSpeaker = m.speaker || (isTurnStart ? '(내레이션)' : lastSpeaker);
+    // 이번 블록의 종류 (갭 판정용)
+    const curBlockType = isNarration ? 'narration' : 'general';
     // 같은 캐릭터 연속 채팅의 구분선은 자동으로 생략 — 화자가 바뀔 때만 구분선
     const speakerChanged = effSpeaker !== lastSpeaker;
     const wantSeparator = isTurnStart && lastSpeaker!==null && speakerChanged;
-    if(wantSeparator){
-      // 일반 화자 ↔ 내레이션(빈 by) 전환이면 divider 대신 공백으로 분리
-      if(isNarration !== lastWasNarration){
+    // 1) 서로 다른 종류의 블록(일반↔나레이션, desc/emote↔일반·나레이션) 사이엔 갭.
+    if(gapBetween(prevBlockType, curBlockType)){
+      html += '<div class="msg-gap"></div>';
+    } else if(wantSeparator){
+      // 2) 같은 종류(일반↔일반) 안에서 화자만 바뀐 경우:
+      if(suppressSep){
+        // desc 배너/emote/삽입물(이미지·핸드아웃) 직후 첫 대사 앞: '가름선'은 생략하되
+        // 간격(공백)은 유지한다.
         html += '<div class="msg-gap"></div>';
       } else if(optDividerShow){
         html += '<hr class="divider">';
       }
     }
+    // 이 메시지가 삽입물(이미지/핸드아웃)이면 다음 대사 앞 '가름선'을 생략하도록 표시,
+    // 그 외 일반/내레이션/롤 블록이면 억제 상태 해제.
+    suppressSep = !!m.insert;
     if(isTurnStart){ lastSpeaker = effSpeaker; lastWasNarration = isNarration; }
 
     const avUrl = m.avatar ? effectiveAvatar(m.avatar) : '';
@@ -2917,6 +3013,7 @@ function buildBook(forExport){
     if(m.isRoll && optRoll){
       // 롤 테이블: 헤더는 동일 정렬, 테이블 본문은 메시지 전체 폭 사용
       html += '<div class="msg msg-roll"'+dataIdx+'>'+delBtn+header+'<div class="roll-body">'+m.rollHTML+'</div></div>';
+      prevBlockType = curBlockType;
       return;
     }
     // 일반 메시지: 헤더 아래 본문을 아바타 너비만큼 들여쓴다 (내레이션은 들여쓰기 없이 본문만)
@@ -2925,6 +3022,7 @@ function buildBook(forExport){
     if(m.whisper) cls += ' msg-whisper';   // 귓속말: 회색(#616161) 스타일
     if(m.insert)  cls += ' msg-insert';    // 우클릭 삽입물(이미지/핸드아웃): 전체폭·기본폰트
     html += '<div class="'+cls+'"'+dataIdx+'>'+delBtn+header+body+'</div>';
+    prevBlockType = curBlockType;
     return;
   });
   return html;
@@ -2935,6 +3033,7 @@ const DIRTY_IDX = new Set();
 function renderPreview(){
   const book=document.getElementById('book');
   DIRTY_IDX.clear();   // 새 DOM 이므로 보류 중 편집 없음
+  if(typeof blkAnchorIdx!=='undefined') blkAnchorIdx=null;   // 재렌더 시 블록 선택 기준 초기화
   if(!MESSAGES.length){book.innerHTML='<div class="placeholder">파싱된 메시지가 없습니다.</div>';return;}
   book.innerHTML=buildBook(false);
 }
@@ -3025,6 +3124,83 @@ document.getElementById('book').addEventListener('input',e=>{
   clearTimeout(editTimer);
   editTimer=setTimeout(snapshot, 500);
 });
+
+/* ===== Shift+클릭 블록 범위 선택 → Delete/Backspace 일괄 삭제 =====
+   각 메시지 본문이 개별 contenteditable 이라 마우스 드래그는 한 블록을 넘지 못한다.
+   그래서 '블록 단위' 선택 UI 를 따로 둔다.
+   - 그냥 클릭: (편집) 기존대로. 블록 선택은 초기화.
+   - Shift+클릭: 마지막 기준(anchor) 블록부터 클릭한 블록까지 범위 선택(하이라이트).
+                anchor 가 없으면 그 블록 하나만 선택하고 anchor 로 지정.
+   - Delete/Backspace: 선택된 블록들을 통째로 삭제.
+   - Esc / 빈 곳 클릭 / 편집 입력: 선택 해제. */
+function topBlockOf(node){
+  if(!node) return null;
+  const el = node.nodeType===1 ? node : node.parentElement;
+  if(!el) return null;
+  return el.closest('.msg[data-idx], .desc-banner[data-idx], .emote-line[data-idx]');
+}
+// 현재 화면의 블록들을 문서 순서대로 반환
+function allBlocks(){
+  return Array.from(document.getElementById('book')
+    .querySelectorAll('.msg[data-idx], .desc-banner[data-idx], .emote-line[data-idx]'));
+}
+let blkAnchorIdx=null;            // Shift 범위 선택의 기준 블록 data-idx
+function clearBlockSelection(){
+  document.querySelectorAll('#book .blk-selected').forEach(el=>el.classList.remove('blk-selected'));
+}
+function selectedBlockEls(){
+  return Array.from(document.querySelectorAll('#book .blk-selected'));
+}
+// anchor..target(둘 다 data-idx) 구간의 블록을 화면 순서 기준으로 하이라이트
+function highlightRange(anchorIdx, targetIdx){
+  const blocks=allBlocks();
+  const ai=blocks.findIndex(b=>+b.dataset.idx===anchorIdx);
+  const ti=blocks.findIndex(b=>+b.dataset.idx===targetIdx);
+  if(ai<0||ti<0) return;
+  const lo=Math.min(ai,ti), hi=Math.max(ai,ti);
+  clearBlockSelection();
+  for(let i=lo;i<=hi;i++) blocks[i].classList.add('blk-selected');
+}
+document.getElementById('book').addEventListener('mousedown',e=>{
+  if(!editOn) return;
+  // 삭제(×)·드래그 핸들 클릭은 각자 핸들러가 처리 → 여기선 무시
+  if(e.target.closest('.msg-del, .msg-drag')) return;
+  const blk=topBlockOf(e.target);
+  if(e.shiftKey && blk){
+    // Shift+클릭: 범위 선택 (텍스트 선택/포커스 이동 방지)
+    e.preventDefault();
+    const tIdx=+blk.dataset.idx;
+    if(blkAnchorIdx===null){ blkAnchorIdx=tIdx; }
+    highlightRange(blkAnchorIdx, tIdx);
+    // 브라우저 텍스트 선택도 지워 시각적 혼동 방지
+    const sel=window.getSelection(); if(sel) sel.removeAllRanges();
+    return;
+  }
+  // 일반 클릭: 블록 선택 해제 (편집은 그대로 진행). anchor 는 이 블록으로 갱신.
+  if(selectedBlockEls().length){ clearBlockSelection(); }
+  blkAnchorIdx = blk ? +blk.dataset.idx : null;
+});
+document.getElementById('book').addEventListener('keydown',e=>{
+  if(!editOn) return;
+  if(e.key==='Escape'){ if(selectedBlockEls().length){ clearBlockSelection(); e.preventDefault(); } return; }
+  if(e.key!=='Delete' && e.key!=='Backspace') return;
+  const chosen=selectedBlockEls();
+  if(chosen.length===0) return;    // 블록 선택이 없으면 기본 편집 동작에 맡김
+  e.preventDefault();
+  syncEditsToModel();              // 삭제 전, 다른 메시지 편집분 보존
+  chosen.forEach(el=>{
+    const idx=+el.dataset.idx;
+    if(!isNaN(idx) && MESSAGES[idx]) MESSAGES[idx].deleted=true;
+  });
+  blkAnchorIdx=null;
+  clearBlockSelection();
+  renderPreview();
+  snapshot();
+});
+// 편집 입력이 시작되면 블록 선택 해제 (혼동 방지)
+document.getElementById('book').addEventListener('input',()=>{ if(selectedBlockEls().length) clearBlockSelection(); });
+// 재렌더되면 선택 상태는 사라지므로 anchor 도 초기화
+
 
 /* ===== 메시지 드래그 앤 드롭 순서 이동 (편집 모드) ===== */
 let dragSrcIdx=null;
