@@ -93,7 +93,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .fontpick.open .fontpick-menu{display:block}
   .fontpick-group{font-size:11px;color:#9a8f7d;padding:8px 10px 3px;font-weight:600}
   .fontpick-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;
-    padding:7px 11px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--ink)}
+    padding:6px 11px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--ink)}
   .fontpick-opt:hover{background:#f2efe8}
   .fontpick-opt.sel{background:#efeafi;background:#eee9df}
   .fontpick-opt .fp-check{color:var(--accent);font-size:13px;flex:none;opacity:0}
@@ -504,6 +504,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <button class="btn go" id="exportEpubBtn" style="margin-top:8px">EPUB 발행 (전자책 다운로드)</button>
     <div id="epubExportStatus" style="font-size:11px;color:#8a8074;font-family:system-ui,sans-serif;margin-top:4px"></div>
     <button class="btn alt" id="exportBtn" style="margin-top:8px;width:100%">수정된 HTML 다운로드</button>
+    <button class="btn alt" id="copyHtmlBtn" style="margin-top:8px;width:100%">수정된 HTML 복사</button>
+    <div id="copyHtmlStatus" style="font-size:11px;color:#8a8074;font-family:system-ui,sans-serif;margin-top:4px"></div>
     <button class="btn alt" id="exportCssBtn" style="margin-top:8px;width:100%">적용된 CSS 다운로드</button>
   </div>
 
@@ -2554,7 +2556,7 @@ function parseEdited(doc){
     }
     if(!node.classList || !node.classList.contains('msg')) return; // hr.divider, msg-gap 등
     const clone=node.cloneNode(true);
-    clone.querySelectorAll('.msg-del').forEach(n=>n.remove());
+    clone.querySelectorAll('.msg-del,.msg-drag').forEach(n=>n.remove());
     const isRoll=node.classList.contains('msg-roll');
     // 내레이션 메시지였는지: msg-narration 클래스로 판별 → byEmpty 복원
     const isNarr=node.classList.contains('msg-narration');
@@ -3994,14 +3996,13 @@ function buildPageCss(forEpub){
 }
 
 /* ---------- export ---------- */
-async function exportHtml(){
-  if(!MESSAGES.length){alert('먼저 파싱하세요.');return;}
+/* 편집 완료된 본문을 정제해 완전한 HTML 문서 문자열로 만든다. (다운로드·복사 공용) */
+async function buildExportedHtmlDoc(){
   const live=document.getElementById('book').cloneNode(true);
-  live.querySelectorAll('.msg-del').forEach(el=>el.remove());
+  live.querySelectorAll('.msg-del,.msg-drag,.insert-bar,.drop-indicator').forEach(el=>el.remove());
   live.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   live.querySelectorAll('.placeholder').forEach(el=>el.remove());
   // Blob URL 이미지를 base64 data URI 로 치환 (독립 HTML 파일에서도 이미지가 보이도록).
-  //   같은 blob URL 은 한 번만 변환해 재사용한다.
   const blobCache=new Map();
   for(const img of [...live.querySelectorAll('img')]){
     const src=img.getAttribute('src')||'';
@@ -4022,17 +4023,19 @@ async function exportHtml(){
   }
   const bodyHTML=live.innerHTML;
   const pageCss=buildPageCss();
+  return '<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n'+
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>채팅 로그</title>\n'+
+    '<style>\n'+pageCss+'\n</style>\n</head>\n<body>\n<div id="book">\n'+bodyHTML+'\n</div>\n</body>\n</html>';
+}
 
+async function exportHtml(){
+  if(!MESSAGES.length){alert('먼저 파싱하세요.');return;}
   let doc;
-  try{
-    doc='<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n'+
-      '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>채팅 로그</title>\n'+
-      '<style>\n'+pageCss+'\n</style>\n</head>\n<body>\n<div id="book">\n'+bodyHTML+'\n</div>\n</body>\n</html>';
-  }catch(err){
+  try{ doc=await buildExportedHtmlDoc(); }
+  catch(err){
     alert('본문이 너무 커서 하나의 HTML 파일로 만들 수 없습니다(이미지 과다). EPUB 발행을 이용하거나, 이미지 압축 설정을 켜고 다시 시도해 주세요.');
     return;
   }
-
   const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -4040,6 +4043,30 @@ async function exportHtml(){
   a.click();
 }
 document.getElementById('exportBtn').addEventListener('click',exportHtml);
+
+/* 편집 완료된 HTML 을 클립보드로 복사 */
+async function copyHtml(){
+  const st=document.getElementById('copyHtmlStatus');
+  if(!MESSAGES.length){ if(st) st.textContent='먼저 파싱하세요.'; return; }
+  let doc;
+  try{ doc=await buildExportedHtmlDoc(); }
+  catch(err){ if(st) st.textContent='본문이 너무 커서 복사에 실패했습니다.'; return; }
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(doc);
+    } else {
+      // 폴백: 임시 textarea 로 복사
+      const ta=document.createElement('textarea');
+      ta.value=doc; ta.style.position='fixed'; ta.style.left='-9999px';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    if(st){ st.textContent='복사되었습니다 ('+doc.length.toLocaleString()+'자).'; }
+  }catch(e){
+    if(st){ st.textContent='복사에 실패했습니다. 다운로드를 이용해 주세요.'; }
+  }
+}
+document.getElementById('copyHtmlBtn').addEventListener('click',copyHtml);
 
 /* 적용된 CSS 파일 다운로드 */
 function exportCss(){
