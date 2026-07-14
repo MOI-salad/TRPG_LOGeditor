@@ -185,10 +185,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .msg .msg-avatar{width:var(--av);height:var(--av);border-radius:50%;object-fit:cover;border:1px solid #e3e3e3;float:left;margin-right:var(--avgap);vertical-align:middle}
   .msg .msg-avatar-empty{border:none;background:transparent;float:left;margin-right:var(--avgap)}
   .msg .speaker{font-weight:bold;font-size:15px;line-height:var(--av);display:inline-block;text-align:left}
-  /* 일반 메시지: 본문을 아바타 너비+gap 만큼 들여쓴다 */
-  .msg.msg-general .msg-body{margin-top:3px;padding-left:calc(var(--av) + var(--avgap));line-height:var(--user-lh)}
+  /* 일반 메시지: 본문을 아바타 너비+gap 만큼 들여쓴다 (아바타 표시 옵션 OFF 시 --indent 가 18px 로 재정의됨) */
+  .msg.msg-general .msg-body{margin-top:3px;padding-left:var(--indent, calc(var(--av) + var(--avgap)));line-height:var(--user-lh)}
   /* 내레이션 메시지: 아바타·헤더 없이 본문만, 좌우 위치는 일반 메시지와 동일, font-weight 600 (폰트는 본문 폰트 유지) */
-  .msg.msg-narration .msg-body{padding-left:calc(var(--av) + var(--avgap));font-family:var(--user-font-narr,'ridibatang',serif);font-weight:400;line-height:var(--user-lh-narr)}
+  .msg.msg-narration .msg-body{padding-left:var(--indent, calc(var(--av) + var(--avgap)));font-family:var(--user-font-narr,'ridibatang',serif);font-weight:400;line-height:var(--user-lh-narr)}
+  /* 아바타를 채팅과 함께 표시 옵션을 껐을 때: 이름은 6px, 본문은 24px 들여쓰기 */
+  #book.no-avatar{--indent:24px}
+  #book.no-avatar .msg .msg-head{padding-left:6px}
   /* 귓속말: 화자명·본문 회색 처리 */
   .msg.msg-whisper .speaker, .msg.msg-whisper .msg-body{color:#616161}
   /* 우클릭 삽입물(이미지/핸드아웃): 들여쓰기·나레이션 폰트 제거하고 전체폭 사용 */
@@ -206,7 +209,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
      들여쓰기(패딩)가 있는 본문에서는 패딩의 절반만큼 좌로 보정해 로그 전체 기준 중앙에 오게 한다. */
   .msg-body img{display:block;margin:6px auto;max-width:100%;height:auto}
   .msg:not(.msg-insert) .msg-body > img,
-  .msg:not(.msg-insert) .msg-body a > img{position:relative;left:calc(-0.5 * (var(--av) + var(--avgap)))}
+  .msg:not(.msg-insert) .msg-body a > img{position:relative;left:calc(-0.5 * var(--indent, calc(var(--av) + var(--avgap))))}
   .msg-body .diceroll img, .msg-body .dicon img, .msg-body .inlinerollresult img,
   .msg-body .formula img, .roll-body img{display:inline;position:static;margin:0;left:auto}
   /* 사이트의 모든 체크박스 색상 */
@@ -227,6 +230,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;
     box-shadow:0 1px 3px rgba(0,0,0,.15);z-index:5;font-family:system-ui,sans-serif}
   .msg-del:hover{background:#9a3b2e;color:#fff;border-color:#9a3b2e}
+  /* 화자 헤더 삽입 드롭다운 (일반 텍스트 우클릭 시) */
+  #speakerPopover{position:fixed;z-index:3100;min-width:210px;max-width:280px;max-height:340px;
+    overflow-y:auto;background:#fff;border:1px solid var(--line);border-radius:8px;
+    box-shadow:0 8px 28px rgba(0,0,0,.18);padding:6px;display:none;font-family:system-ui,sans-serif}
+  #speakerPopover.open{display:block}
+  #speakerPopover .sp-title{font-size:11px;color:#8a8074;padding:4px 8px 6px;font-weight:600}
+  #speakerPopover .sp-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;
+    cursor:pointer;font-size:13px;color:#2b2721}
+  #speakerPopover .sp-item:hover{background:#f2ede2}
+  #speakerPopover .sp-item.sp-cur{background:#f2f5f2;font-weight:600}
+  #speakerPopover .sp-item img{width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none;border:1px solid #e3e3e3}
+  #speakerPopover .sp-item .sp-noimg{width:26px;height:26px;border-radius:50%;flex:none;border:1px dashed #ccc;background:#f5f2ea}
+  #speakerPopover .sp-item .sp-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #speakerPopover .sp-sep{height:1px;background:var(--line);margin:6px 2px}
+  #speakerPopover .sp-clear{color:#9a3b2e;font-size:12px;text-align:center;padding:6px;cursor:pointer;border-radius:6px}
+  #speakerPopover .sp-clear:hover{background:#f6e6e3}
   /* 메시지 드래그 핸들 (편집 모드 호버 시 노출) */
   .msg-drag{position:absolute;top:4px;left:-8px;width:24px;height:24px;border-radius:6px;
     border:1px solid var(--line);background:#eef0f7;color:#7a7f95;
@@ -459,6 +478,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </div>
 
 <div id="cursorTip" role="tooltip"></div>
+
+<!-- 화자 헤더 강제 지정 팝오버 -->
+<div id="speakerPopover"></div>
 
 <!-- HTML 코드 삽입 모달 -->
 <div class="modal-overlay" id="htmlInsertModal">
@@ -3159,10 +3181,33 @@ function buildBook(forExport){
     return prev!==null && prev!==cur;
   }
 
-  MESSAGES.forEach((m,idx)=>{
-    if(m.deleted) return;
+  MESSAGES.forEach((m0,idx)=>{
+    if(m0.deleted) return;
     // "This message has been hidden." 메시지는 항상 삭제 (자동)
-    if(m.isHidden) return;
+    if(m0.isHidden) return;
+    // ── 강제 화자 헤더(사용자 수동 지정) ──────────────────────────────
+    //   m0.forcedHeader = {name, original} 이 지정되어 있으면, 파서가 추론한
+    //   speaker/avatar/byEmpty 를 무시하고 사용자가 고른 화자로 덮어써 이후의 모든
+    //   렌더 로직(나레이션 판정·갭·구분선·헤더 생략 판정 등)이 이 강제 화자를 기준으로
+    //   동작하게 한다. 정체성 키는 아바타 원본 URL(original)이므로, 서로 다른 아바타를
+    //   쓰는 여러 '(이름 없음)' 화자도 구분된다. 아바타는 저장해두지 않고 매 렌더마다
+    //   화자 목록(AVATARS)에서 실시간 조회한다 — 화자 목록에서 아바타 URL(replacement)을
+    //   바꾸면 이미 삽입된 강제 헤더도 자동으로 함께 바뀐다.
+    let m = m0;
+    if(m0.forcedHeader){
+      const fh = m0.forcedHeader;
+      let entry = null;
+      if(fh.original) entry = AVATARS.find(a=>a.original===fh.original);
+      if(!entry) entry = AVATARS.find(a=>a.name===(fh.name||'') && !a.original);
+      const nm = entry ? entry.name : (fh.name||'');
+      // avatar 는 원본 URL 로 넘긴다 → 아래의 effectiveAvatar() 가 교체본(replacement)을 적용
+      const av = entry ? (entry.original||'') : (fh.original||'');
+      m = Object.assign({}, m0, {
+        speaker: nm,
+        avatar: av,
+        byEmpty: !nm
+      });
+    }
     // 미리보기 전용 삭제 버튼 (편집 모드일 때 호버 시 노출)
     const delBtn = forExport ? '' : '<button class="msg-del" data-idx="'+idx+'" title="이 메시지 삭제" aria-label="삭제">×</button>'+
       '<button class="msg-drag" data-idx="'+idx+'" draggable="true" title="드래그하여 순서 이동" aria-label="이동">\u283f</button>';
@@ -3304,11 +3349,20 @@ function buildBook(forExport){
 const DIRTY_IDX = new Set();
 function renderPreview(){
   const book=document.getElementById('book');
+  // 재렌더 시 미리보기 스크롤 위치 보존 — 헤더 삽입/삭제/옵션 변경 후에도 보던 화면 유지
+  const stage=book.closest('.stage');
+  const keepScroll=stage?stage.scrollTop:0;
+  const winX=window.scrollX, winY=window.scrollY;
   DIRTY_IDX.clear();   // 새 DOM 이므로 보류 중 편집 없음
   if(typeof blkAnchorIdx!=='undefined') blkAnchorIdx=null;   // 재렌더 시 블록 선택 기준 초기화
+  // 아바타 표시 옵션이 꺼져 있으면 #book 에 no-avatar 클래스를 부여해 본문 들여쓰기를 줄인다.
+  const optAvatarEl=document.getElementById('optAvatar');
+  book.classList.toggle('no-avatar', !!(optAvatarEl && !optAvatarEl.checked));
   if(!MESSAGES.length){book.innerHTML='<div class="placeholder">파싱된 메시지가 없습니다.</div>';return;}
   // 본문 편집 on/off 는 buildBook 이 직접 반영하므로 재렌더 후 개별 요소 순회가 필요 없다 (성능)
   book.innerHTML=buildBook(false);
+  if(stage) stage.scrollTop=keepScroll;
+  window.scrollTo(winX, winY);
 }
 
 /* 미리보기에서 직접 편집한 내용(contenteditable)을 MESSAGES 모델로 되돌려 저장한다.
@@ -3333,7 +3387,13 @@ function syncEditsToModel(){
     const node=book.querySelector('.msg[data-idx="'+idx+'"]');
     if(!node) return;
     const spk=node.querySelector('.speaker');
-    if(spk){ m.speaker = spk.textContent.trim(); }
+    if(spk){
+      const newName = spk.textContent.trim();
+      m.speaker = newName;
+      // 강제 헤더가 걸린 메시지라면, 미리보기에서 직접 고친 이름도 forcedHeader 에 반영해
+      // 다음 렌더에서도 같은 이름이 유지되도록 한다 (그렇지 않으면 재렌더 시 되돌아감).
+      if(m.forcedHeader) m.forcedHeader.name = newName;
+    }
     const body=node.querySelector('.msg-body');
     if(body){ m.bodyHTML = body.innerHTML; }
   });
@@ -3348,7 +3408,8 @@ function snapshot(){
   if(restoring) return;
   const book=document.getElementById('book');
   if(!MESSAGES.length) return;
-  const state={ html: book.innerHTML, deleted: MESSAGES.map(m=>!!m.deleted) };
+  const state={ html: book.innerHTML, deleted: MESSAGES.map(m=>!!m.deleted),
+    forcedHeader: MESSAGES.map(m=>(m.forcedHeader?{name:m.forcedHeader.name,original:m.forcedHeader.original}:null)) };
   // 동일 상태면 저장 안 함
   if(HPTR>=0 && HISTORY[HPTR] && HISTORY[HPTR].html===state.html) return;
   HISTORY=HISTORY.slice(0,HPTR+1);
@@ -3359,8 +3420,18 @@ function snapshot(){
 }
 function restoreState(s){
   restoring=true;
-  document.getElementById('book').innerHTML=s.html;
+  const bookEl2=document.getElementById('book');
+  const stage=bookEl2.closest('.stage');
+  const keepScroll=stage?stage.scrollTop:0;   // undo/redo 후에도 보던 위치 유지
+  const winX=window.scrollX, winY=window.scrollY;
+  bookEl2.innerHTML=s.html;
+  if(stage) stage.scrollTop=keepScroll;
+  window.scrollTo(winX, winY);
   if(s.deleted) MESSAGES.forEach((m,i)=>{ m.deleted=!!s.deleted[i]; });
+  if(s.forcedHeader) MESSAGES.forEach((m,i)=>{
+    const v=s.forcedHeader[i];
+    if(!v) delete m.forcedHeader; else m.forcedHeader={name:v.name,original:v.original};
+  });
   restoring=false;
 }
 function doUndo(){
@@ -3395,6 +3466,130 @@ document.getElementById('book').addEventListener('mousedown',e=>{
     renderPreview();
     snapshot();
   }
+});
+
+/* ===== 화자 헤더 강제 삽입 (일반 텍스트 우클릭 → 아바타 목록 드롭다운) =====
+   미리보기 상단의 어떤 모드 버튼(HTML 편집·이미지/핸드아웃 삽입)도 켜져 있지 않은 상태에서
+   일반/롤 메시지를 우클릭하면, 로그에 등장하는 아바타 목록이 세로 드롭다운으로 나타난다.
+   원하는 아바타(화자)를 선택하면 그 메시지에 화자 헤더가 강제로 삽입된다.
+
+   저장 형식: MESSAGES[idx].forcedHeader = { name, original }
+     - original(아바타 원본 URL)이 정체성 키 → 서로 다른 아바타를 쓰는 여러 '(이름 없음)'
+       화자도 각각 구분해 선택할 수 있다.
+     - 렌더 시 AVATARS 에서 original 로 항목을 찾아 이름·현재 아바타(교체본 포함)를 실시간
+       조회하므로, 이후 화자 목록에서 해당 화자의 아바타 URL을 바꾸면 이미 삽입된 강제
+       헤더에도 변경사항이 자동 반영된다.
+     - 미리보기·직접 편집 화면에 즉시 보이며, HTML 내보내기/EPUB 발행 시에도 (buildBook 이
+       공용이므로) 동일하게 반영된다. */
+let spPopoverIdx=-1;
+document.getElementById('book').addEventListener('contextmenu',e=>{
+  // 다른 모드가 켜져 있으면 그 모드의 우클릭 동작에 양보한다
+  if(typeof htmlEditOn!=='undefined' && htmlEditOn) return;
+  if(typeof insertMode!=='undefined' && insertMode) return;
+  const node=e.target.closest('.msg[data-idx]');
+  if(!node) return;                                  // desc 배너/emote/기타 영역은 대상 아님
+  if(node.classList.contains('msg-insert')) return;  // 편집기 삽입물(이미지/핸드아웃)은 화자 개념 없음
+  const idx=+node.dataset.idx;
+  if(isNaN(idx) || !MESSAGES[idx]) return;
+  e.preventDefault();
+  e.stopPropagation();
+  openSpeakerPopover(e.clientX, e.clientY, idx);
+});
+
+function openSpeakerPopover(x, y, idx){
+  spPopoverIdx=idx;
+  const pop=document.getElementById('speakerPopover');
+  const m=MESSAGES[idx];
+  const fh=m.forcedHeader||null;
+  let html='<div class="sp-title">화자 헤더 삽입</div>';
+  if(!AVATARS.length){
+    html += '<div class="sp-title" style="font-weight:400">화자 목록이 비어 있습니다. 먼저 파싱하세요.</div>';
+  }
+  AVATARS.forEach((a,i)=>{
+    const shown=a.replacement||a.original;
+    const nameHasVisible = /[0-9A-Za-z\uAC00-\uD7A3\u3131-\u318E\u4E00-\u9FFF\u3040-\u30FF\u3000-\u303F!-~]/.test(a.name||'');
+    let label;
+    if(!a.name) label='(이름 없음)';
+    else if(!nameHasVisible) label='(기호 이름)';
+    else label=esc(a.name);
+    const imgHtml = shown
+      ? '<img src="'+esc(shown)+'" alt="">'
+      : '<span class="sp-noimg"></span>';
+    const isCur = !!fh && ((fh.original && fh.original===a.original) || (!fh.original && !a.original && (fh.name||'')===a.name));
+    html += '<div class="sp-item'+(isCur?' sp-cur':'')+'" data-i="'+i+'">'+imgHtml+'<span class="sp-name">'+label+(isCur?' ✓':'')+'</span></div>';
+  });
+  if(fh){
+    html += '<div class="sp-sep"></div>';
+    html += '<div class="sp-clear" id="spClearForced">강제 헤더 해제 (자동 판정으로 되돌리기)</div>';
+  }
+  pop.innerHTML=html;
+  // 위치: 우클릭 지점, 화면 밖으로 나가면 보정
+  pop.style.left='0px'; pop.style.top='0px';
+  pop.classList.add('open');
+  const pr=pop.getBoundingClientRect();
+  let left=x, top=y+4;
+  if(left+pr.width>window.innerWidth-6) left=window.innerWidth-pr.width-6;
+  if(top+pr.height>window.innerHeight-6) top=y-pr.height-4;
+  if(left<6) left=6;
+  if(top<6) top=6;
+  pop.style.left=left+'px'; pop.style.top=top+'px';
+}
+function closeSpeakerPopover(){
+  const pop=document.getElementById('speakerPopover');
+  pop.classList.remove('open');
+  pop.innerHTML='';
+  spPopoverIdx=-1;
+}
+function applyForcedHeader(idx, avatarIdx){
+  const m=MESSAGES[idx];
+  const a=AVATARS[avatarIdx];
+  if(!m || !a) return;
+  syncEditsToModel();
+  m.forcedHeader = { name: a.name||'', original: a.original||'' };
+  renderPreview();
+  snapshot();
+}
+function clearForcedHeader(idx){
+  const m=MESSAGES[idx];
+  if(!m) return;
+  syncEditsToModel();
+  delete m.forcedHeader;
+  renderPreview();
+  snapshot();
+}
+document.getElementById('speakerPopover').addEventListener('mousedown',e=>{
+  e.stopPropagation();
+  const item=e.target.closest('.sp-item');
+  if(item){
+    e.preventDefault();
+    applyForcedHeader(spPopoverIdx, +item.dataset.i);
+    closeSpeakerPopover();
+    return;
+  }
+  if(e.target.closest('#spClearForced')){
+    e.preventDefault();
+    clearForcedHeader(spPopoverIdx);
+    closeSpeakerPopover();
+    return;
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.getElementById('speakerPopover').classList.contains('open')){
+    closeSpeakerPopover();
+  }
+});
+document.addEventListener('mousedown',e=>{
+  const pop=document.getElementById('speakerPopover');
+  if(!pop.classList.contains('open')) return;
+  if(e.target.closest('#speakerPopover')) return;
+  closeSpeakerPopover();
+});
+// 팝오버가 열린 상태에서 다른 곳 우클릭 → 팝오버를 새 위치로 옮기거나 닫는다
+document.addEventListener('contextmenu',e=>{
+  const pop=document.getElementById('speakerPopover');
+  if(!pop.classList.contains('open')) return;
+  if(e.target.closest('#speakerPopover')){ e.preventDefault(); return; }
+  if(!e.target.closest('#book .msg[data-idx]')) closeSpeakerPopover();
 });
 
 /* 텍스트 직접 편집(contenteditable) 시 디바운스 스냅샷 + 편집 블록 dirty 표시 */
@@ -5168,12 +5363,14 @@ function buildPageCss(forEpub){
 '.msg .msg-avatar{width:var(--av);height:var(--av);border-radius:50%;object-fit:cover;border:1px solid #e3e3e3;float:left;margin-right:var(--avgap);vertical-align:middle}\n'+
 '.msg .msg-avatar-empty{border:none;background:transparent;float:left;margin-right:var(--avgap)}\n'+
 '.msg .speaker{font-weight:bold;font-size:15px;line-height:var(--av);display:inline-block;text-align:left}\n'+
-'.msg.msg-general .msg-body{margin-top:3px;padding-left:calc(var(--av) + var(--avgap));line-height:var(--user-lh)}\n'+
-'.msg.msg-narration .msg-body{padding-left:calc(var(--av) + var(--avgap));font-family:var(--user-font-narr);font-weight:400;line-height:var(--user-lh-narr)}\n'+
+'.msg.msg-general .msg-body{margin-top:3px;padding-left:var(--indent, calc(var(--av) + var(--avgap)));line-height:var(--user-lh)}\n'+
+'.msg.msg-narration .msg-body{padding-left:var(--indent, calc(var(--av) + var(--avgap)));font-family:var(--user-font-narr);font-weight:400;line-height:var(--user-lh-narr)}\n'+
+'#book.no-avatar{--indent:24px}\n'+
+'#book.no-avatar .msg .msg-head{padding-left:6px}\n'+
 '.msg.msg-whisper .speaker, .msg.msg-whisper .msg-body{color:#616161}\n'+
 '.msg.msg-insert .msg-body{padding-left:0;font-family:inherit}\n'+
 '.msg-body img{display:block;margin:6px auto;max-width:100%;height:auto}\n'+
-'.msg:not(.msg-insert) .msg-body > img, .msg:not(.msg-insert) .msg-body a > img{position:relative;left:calc(-0.5 * (var(--av) + var(--avgap)))}\n'+
+'.msg:not(.msg-insert) .msg-body > img, .msg:not(.msg-insert) .msg-body a > img{position:relative;left:calc(-0.5 * var(--indent, calc(var(--av) + var(--avgap))))}\n'+
 '.msg-body .diceroll img, .msg-body .dicon img, .msg-body .inlinerollresult img, .msg-body .formula img, .roll-body img{display:inline;position:static;margin:0;left:auto}\n'+
 '.msg.msg-roll .roll-body{margin-top:6px;width:100%}\n'+
 '.msg.msg-roll .sheet-rolltemplate-coc{width:100%}\n'+
@@ -5218,7 +5415,7 @@ async function buildExportedHtmlDoc(){
   const pageCss=buildPageCss();
   return '<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n'+
     '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>채팅 로그</title>\n'+
-    '<style>\n'+pageCss+'\n</style>\n</head>\n<body>\n<div id="book">\n'+bodyHTML+'\n</div>\n</body>\n</html>';
+    '<style>\n'+pageCss+'\n</style>\n</head>\n<body>\n<div id="book"'+(live.classList.contains('no-avatar')?' class="no-avatar"':'')+'>\n'+bodyHTML+'\n</div>\n</body>\n</html>';
 }
 
 async function exportHtml(){
@@ -5592,7 +5789,7 @@ async function exportEpub(){
 '<html xmlns="http://www.w3.org/1999/xhtml" lang="ko" xml:lang="ko">\n'+
 '<head><meta charset="utf-8"/><title>'+esc(title)+'</title>\n'+
 '<link rel="stylesheet" type="text/css" href="style.css"/></head>\n'+
-'<body><div id="book">\n'+bodyXhtml+'\n</div></body></html>');
+'<body><div id="book"'+(live.classList.contains('no-avatar')?' class="no-avatar"':'')+'>\n'+bodyXhtml+'\n</div></body></html>');
   oebps.file('nav.xhtml',
 '<?xml version="1.0" encoding="utf-8"?>\n'+
 '<!DOCTYPE html>\n'+
