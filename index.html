@@ -189,9 +189,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .msg.msg-general .msg-body{margin-top:3px;padding-left:var(--indent, calc(var(--av) + var(--avgap)));line-height:var(--user-lh)}
   /* 내레이션 메시지: 아바타·헤더 없이 본문만, 좌우 위치는 일반 메시지와 동일, font-weight 600 (폰트는 본문 폰트 유지) */
   .msg.msg-narration .msg-body{padding-left:var(--indent, calc(var(--av) + var(--avgap)));font-family:var(--user-font-narr,'ridibatang',serif);font-weight:400;line-height:var(--user-lh-narr)}
-  /* 아바타를 채팅과 함께 표시 옵션을 껐을 때: 이름은 6px, 본문은 24px 들여쓰기 */
+  /* 아바타를 채팅과 함께 표시 옵션을 껐을 때: 이름은 12px, 본문은 24px 들여쓰기 */
   #book.no-avatar{--indent:24px}
-  #book.no-avatar .msg .msg-head{padding-left:6px}
+  #book.no-avatar .msg .msg-head{padding-left:12px}
   /* 귓속말: 화자명·본문 회색 처리 */
   .msg.msg-whisper .speaker, .msg.msg-whisper .msg-body{color:#616161}
   /* 우클릭 삽입물(이미지/핸드아웃): 들여쓰기·나레이션 폰트 제거하고 전체폭 사용 */
@@ -685,11 +685,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       </span>
       <button id="clearColorBtn" title="선택 영역의 글자색·배경색 제거">색 지우기</button>
       <span class="tb-spacer"></span>
-      <button id="toggleEdit" class="tb-toggle active" title="미리보기에서 텍스트를 클릭해 바로 수정합니다. Shift+클릭으로 여러 블록을 선택한 뒤 Delete 키로 한꺼번에 삭제할 수 있습니다.">
+      <button id="toggleEdit" class="tb-toggle active" data-tip="미리보기에서 텍스트를 클릭해 바로 수정합니다. 화자 명을 우클릭하여 화자를 변경하거나, 새로운 화자 헤더를 삽입할 수 있습니다. Shift+클릭으로 여러 블록을 선택한 뒤 Delete 키로 한꺼번에 삭제할 수 있습니다.">
         <svg class="tb-ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><g><path d="M5,19H9.414L23.057,5.357a3.125,3.125,0,0,0,0-4.414,3.194,3.194,0,0,0-4.414,0L5,14.586Zm2-3.586L20.057,2.357a1.148,1.148,0,0,1,1.586,0,1.123,1.123,0,0,1,0,1.586L8.586,17H7Z"/><path d="M23.621,7.622,22,9.243V16H16v6H2V3A1,1,0,0,1,3,2H14.758L16.379.379A5.013,5.013,0,0,1,16.84,0H3A3,3,0,0,0,0,3V24H18.414L24,18.414V7.161A5.15,5.15,0,0,1,23.621,7.622ZM18,21.586V18h3.586Z"/></g></svg>
         <span>본문 편집</span>
       </button>
-      <button id="toggleHtmlEdit" class="tb-toggle" data-tip="켜면 메시지를 우클릭해 해당 HTML을 편집하고, 원하는 위치(막대 표시)를 좌클릭해 새 HTML 코드를 나레이션 권한으로 삽입합니다.">&lt;/&gt; HTML 편집</button>
+      <button id="toggleHtmlEdit" class="tb-toggle" data-tip="켜면 메시지를 우클릭해 해당 HTML을 편집하고, 원하는 위치(막대 표시)를 클릭해 새 HTML 코드를 나레이션 권한으로 삽입합니다.">&lt;/&gt; HTML 편집</button>
       <span class="sep"></span>
       <button id="toggleImgInsert" class="tb-toggle" data-tip="켜면 미리보기에서 원하는 위치를 클릭해 이미지를 나레이션으로 삽입합니다. (Esc로 취소)">
         <svg class="tb-ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><g><path d="M21,0H3A3,3,0,0,0,0,3V24H24V3A3,3,0,0,0,21,0ZM3,2H21a1,1,0,0,1,1,1V20.586L11.121,9.707a3,3,0,0,0-4.242,0L2,14.586V3A1,1,0,0,1,3,2ZM2,17.414l6.293-6.293a1,1,0,0,1,1.414,0L20.586,22H2Z"/><path d="M16,10a3,3,0,1,0-3-3A3,3,0,0,0,16,10Zm0-4a1,1,0,1,1-1,1A1,1,0,0,1,16,6Z"/></g></svg>
@@ -2037,11 +2037,11 @@ const PRESET_INSANE = String.raw`/*----- Common Style */
 	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total {width:80px; text-align:center; position:relative;}
 	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-roll {position:relative;}
 	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-dice-val {display:block; position:relative; font-size:25px; font-weight:800; z-index:0; line-height:35px; margin-bottom:5px;}
-	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-dice-val:before {content:'t'; font-family:"dicefontd20"; font-size:2em; display:block; position:absolute; top:50%; left:50%; opacity:.3; z-index:-1; transform:translate(-50%,-50%); -webkit-transform:translate(-50%,-50%);}
+	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-dice-val:before {content:none;}
 	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-mod {display:block; position:absolute; right:0; bottom:0; color:#fff !important; text-shadow: rgb(0, 0, 0) 1px 0px 0px, rgb(0, 0, 0) 0.540302px 0.841471px 0px, rgb(0, 0, 0) -0.416147px 0.909297px 0px, rgb(0, 0, 0) -0.989992px 0.14112px 0px, rgb(0, 0, 0) -0.653644px -0.756802px 0px, rgb(0, 0, 0) 0.283662px -0.958924px 0px, rgb(0, 0, 0) 0.96017px -0.279415px 0px;}
 	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-detail-dice {display:flex; flex-wrap:wrap; gap:15px; justify-content:center;}
 	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-detail-dice > * {display:block; position:relative; font-size:11px; z-index:1;}
-	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-detail-dice > *:before {content:'t'; font-family:"dicefontd20"; display:block; position:absolute; top:50%; left:50%; font-size:1.5em; opacity:.5; z-index:-1; transform:translate(-50%,-50%); -webkit-transform:translate(-50%,-50%);}
+	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-detail-dice > *:before {content:none;}
 	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-detail-dice .fullfail {color:#ff000c !important;}
 	.sheet-rolltemplate-InsDice .sheet-dice-area .sheet-total .sheet-detail-dice .fullcrit {color:#d1bb1f !important;}
 	.sheet-rolltemplate-InsDice .sheet-data {width:calc(100% - 90px); text-align:right;}
@@ -2077,11 +2077,11 @@ const PRESET_INSANE = String.raw`/*----- Common Style */
 	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total {width:80px; text-align:center; position:relative;}
 	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-roll {position:relative;}
 	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-dice-val {display:block; position:relative; font-size:25px; font-weight:800; z-index:0; line-height:35px; margin-bottom:5px;}
-	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-dice-val:before {content:'t'; font-family:"dicefontd20"; font-size:2em; display:block; position:absolute; top:50%; left:50%; opacity:.3; z-index:-1; transform:translate(-50%,-50%); -webkit-transform:translate(-50%,-50%);}
+	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-dice-val:before {content:none;}
 	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-mod {display:block; position:absolute; right:0; bottom:0; color:#fff !important; text-shadow: rgb(0, 0, 0) 1px 0px 0px, rgb(0, 0, 0) 0.540302px 0.841471px 0px, rgb(0, 0, 0) -0.416147px 0.909297px 0px, rgb(0, 0, 0) -0.989992px 0.14112px 0px, rgb(0, 0, 0) -0.653644px -0.756802px 0px, rgb(0, 0, 0) 0.283662px -0.958924px 0px, rgb(0, 0, 0) 0.96017px -0.279415px 0px;}
 	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-detail-dice {display:flex; flex-wrap:wrap; gap:15px; justify-content:center;}
 	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-detail-dice > * {display:block; position:relative; font-size:11px; z-index:1;}
-	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-detail-dice > *:before {content:'t'; font-family:"dicefontd20"; display:block; position:absolute; top:50%; left:50%; font-size:1.5em; opacity:.5; z-index:-1; transform:translate(-50%,-50%); -webkit-transform:translate(-50%,-50%);}
+	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-detail-dice > *:before {content:none;}
 	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-detail-dice .fullfail {color:#ff000c !important;}
 	.sheet-rolltemplate-InsAfter .sheet-dice-area .sheet-total .sheet-detail-dice .fullcrit {color:#d1bb1f !important;}
 	.sheet-rolltemplate-InsAfter .sheet-data {width:calc(100% - 90px); text-align:right;}
@@ -2129,11 +2129,11 @@ const PRESET_INSANE = String.raw`/*----- Common Style */
 	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total {width:80px; text-align:center; position:relative;}
 	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-roll {position:relative;}
 	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-dice-val {display:block; position:relative; font-size:25px; font-weight:800; z-index:0; line-height:35px; margin-bottom:5px;}
-	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-dice-val:before {content:'t'; font-family:"dicefontd20"; font-size:2em; display:block; position:absolute; top:50%; left:50%; opacity:.3; z-index:-1; transform:translate(-50%,-50%); -webkit-transform:translate(-50%,-50%);}
+	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-dice-val:before {content:none;}
 	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-mod {display:block; position:absolute; right:0; bottom:0; color:#fff !important; text-shadow: rgb(0, 0, 0) 1px 0px 0px, rgb(0, 0, 0) 0.540302px 0.841471px 0px, rgb(0, 0, 0) -0.416147px 0.909297px 0px, rgb(0, 0, 0) -0.989992px 0.14112px 0px, rgb(0, 0, 0) -0.653644px -0.756802px 0px, rgb(0, 0, 0) 0.283662px -0.958924px 0px, rgb(0, 0, 0) 0.96017px -0.279415px 0px;}
 	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-detail-dice {display:flex; flex-wrap:wrap; gap:15px; justify-content:center;}
 	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-detail-dice > * {display:block; position:relative; font-size:11px; z-index:1;}
-	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-detail-dice > *:before {content:'t'; font-family:"dicefontd20"; display:block; position:absolute; top:50%; left:50%; font-size:1.5em; opacity:.5; z-index:-1; transform:translate(-50%,-50%); -webkit-transform:translate(-50%,-50%);}
+	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-detail-dice > *:before {content:none;}
 	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-detail-dice .fullfail {color:#ff000c !important;}
 	.sheet-rolltemplate-InsSkill .sheet-dice-area .sheet-total .sheet-detail-dice .fullcrit {color:#d1bb1f !important;}
 	.sheet-rolltemplate-InsSkill .sheet-data {width:calc(100% - 90px); text-align:right;}
@@ -3144,7 +3144,7 @@ function renderAvatarList(){
     btn.addEventListener('click',e=>{
       const i=+e.currentTarget.dataset.i;
       AVATARS[i].narration=!AVATARS[i].narration;
-      if(MESSAGES.length){ syncEditsToModel(); renderPreview(); snapshot(); }
+      if(MESSAGES.length){ syncEditsToModel(); snapshot(renderPreview()); }
       renderAvatarList();
     });
   });
@@ -3347,22 +3347,72 @@ function buildBook(forExport){
 
 // 편집된 메시지 인덱스만 추적 → 전체 DOM 스캔 대신 변경분만 동기화 (성능)
 const DIRTY_IDX = new Set();
+/* ===== 재렌더 시 스크롤 앵커 보존 =====
+   #book 은 성능을 위해 content-visibility:auto 를 쓰므로, innerHTML 을 교체하면 화면 밖
+   블록들의 높이가 추정치(90px)로 리셋되어 전체 스크롤 좌표계가 달라진다. 따라서 픽셀값
+   (scrollTop)을 그대로 복원하면 전혀 다른 위치로 튄다. 대신 '화면 상단에 보이던 메시지
+   블록(data-idx)'과 그 상대 오프셋을 기억했다가, 재렌더 후 같은 블록을 찾아 그 위치로
+   스크롤을 재정렬한다. */
+function captureScrollAnchor(){
+  const book=document.getElementById('book');
+  const stage=book?book.closest('.stage'):null;
+  if(!stage) return null;
+  const blocks=book.querySelectorAll(':scope > [data-idx]');
+  const n=blocks.length;
+  const base={stage, top:stage.scrollTop, winX:window.scrollX, winY:window.scrollY, idx:null, delta:0};
+  if(!n) return base;
+  const stTop=stage.getBoundingClientRect().top;
+  // 블록은 세로 정렬 → 이진 탐색으로 '화면 상단(스테이지 top)에 걸친 첫 블록'을 찾는다
+  let lo=0, hi=n-1, found=-1;
+  while(lo<=hi){
+    const mid=(lo+hi)>>1;
+    const r=blocks[mid].getBoundingClientRect();
+    if(r.bottom >= stTop){ found=mid; hi=mid-1; } else lo=mid+1;
+  }
+  if(found<0) found=n-1;
+  const el=blocks[found];
+  base.idx=el.getAttribute('data-idx');
+  base.delta=el.getBoundingClientRect().top - stTop;
+  return base;
+}
+function restoreScrollAnchor(anchor){
+  if(!anchor) return;
+  const stage=anchor.stage;
+  const book=document.getElementById('book');
+  if(anchor.idx!==null && book){
+    let el=book.querySelector(':scope > [data-idx="'+anchor.idx+'"]');
+    if(!el){
+      // 앵커 블록이 삭제되어 사라졌으면, 그 이후의 가장 가까운 블록으로 대체
+      const all=[...book.querySelectorAll(':scope > [data-idx]')];
+      el=all.find(b=>+b.getAttribute('data-idx') >= +anchor.idx) || all[all.length-1] || null;
+    }
+    if(el){
+      const stTop=stage.getBoundingClientRect().top;
+      stage.scrollTop += (el.getBoundingClientRect().top - stTop) - anchor.delta;
+      window.scrollTo(anchor.winX, anchor.winY);
+      return;
+    }
+  }
+  stage.scrollTop=anchor.top;
+  window.scrollTo(anchor.winX, anchor.winY);
+}
+
 function renderPreview(){
   const book=document.getElementById('book');
   // 재렌더 시 미리보기 스크롤 위치 보존 — 헤더 삽입/삭제/옵션 변경 후에도 보던 화면 유지
-  const stage=book.closest('.stage');
-  const keepScroll=stage?stage.scrollTop:0;
-  const winX=window.scrollX, winY=window.scrollY;
+  const anchor=captureScrollAnchor();
   DIRTY_IDX.clear();   // 새 DOM 이므로 보류 중 편집 없음
   if(typeof blkAnchorIdx!=='undefined') blkAnchorIdx=null;   // 재렌더 시 블록 선택 기준 초기화
   // 아바타 표시 옵션이 꺼져 있으면 #book 에 no-avatar 클래스를 부여해 본문 들여쓰기를 줄인다.
   const optAvatarEl=document.getElementById('optAvatar');
   book.classList.toggle('no-avatar', !!(optAvatarEl && !optAvatarEl.checked));
-  if(!MESSAGES.length){book.innerHTML='<div class="placeholder">파싱된 메시지가 없습니다.</div>';return;}
+  if(!MESSAGES.length){book.innerHTML='<div class="placeholder">파싱된 메시지가 없습니다.</div>';return null;}
   // 본문 편집 on/off 는 buildBook 이 직접 반영하므로 재렌더 후 개별 요소 순회가 필요 없다 (성능)
-  book.innerHTML=buildBook(false);
-  if(stage) stage.scrollTop=keepScroll;
-  window.scrollTo(winX, winY);
+  const builtHtml=buildBook(false);
+  book.innerHTML=builtHtml;
+  restoreScrollAnchor(anchor);
+  // 방금 만든 문자열을 반환 — 직후의 snapshot() 이 DOM 재직렬화(innerHTML 읽기) 없이 재사용한다 (성능)
+  return builtHtml;
 }
 
 /* 미리보기에서 직접 편집한 내용(contenteditable)을 MESSAGES 모델로 되돌려 저장한다.
@@ -3404,29 +3454,33 @@ function syncEditsToModel(){
    스냅샷 = 현재 미리보기 본문(#book innerHTML) + MESSAGES 의 deleted 상태.
    텍스트 편집/삭제/옵션변경 등 모든 변경 후의 화면 상태를 그대로 저장·복원한다.       */
 let HISTORY=[]; let HPTR=-1; let restoring=false;
-function snapshot(){
+// 되돌리기 히스토리 저장 문자 총량 상한 (~96MB 메모리) — 대형 로그에서 메모리 폭증 방지
+const HISTORY_CHAR_BUDGET = 48*1048576;
+function snapshot(fromRenderHtml){
   if(restoring) return;
   const book=document.getElementById('book');
   if(!MESSAGES.length) return;
-  const state={ html: book.innerHTML, deleted: MESSAGES.map(m=>!!m.deleted),
+  // renderPreview 직후 호출이면 방금 만든 문자열을 그대로 사용 — 대형 로그에서
+  // innerHTML 재직렬화 비용(수십~수백 ms)을 없앤다.
+  const html = (typeof fromRenderHtml==='string') ? fromRenderHtml : book.innerHTML;
+  const state={ html, deleted: MESSAGES.map(m=>!!m.deleted),
     forcedHeader: MESSAGES.map(m=>(m.forcedHeader?{name:m.forcedHeader.name,original:m.forcedHeader.original}:null)) };
   // 동일 상태면 저장 안 함
   if(HPTR>=0 && HISTORY[HPTR] && HISTORY[HPTR].html===state.html) return;
   HISTORY=HISTORY.slice(0,HPTR+1);
   HISTORY.push(state);
   if(HISTORY.length>30) HISTORY.shift();
+  // 총량 상한: 큰 로그에서 30개를 다 채우기 전에도 오래된 것부터 정리
+  let total=0; for(const h of HISTORY) total+=h.html.length;
+  while(HISTORY.length>2 && total>HISTORY_CHAR_BUDGET){ total-=HISTORY[0].html.length; HISTORY.shift(); }
   HPTR=HISTORY.length-1;
   updateUndoButtons();
 }
 function restoreState(s){
   restoring=true;
-  const bookEl2=document.getElementById('book');
-  const stage=bookEl2.closest('.stage');
-  const keepScroll=stage?stage.scrollTop:0;   // undo/redo 후에도 보던 위치 유지
-  const winX=window.scrollX, winY=window.scrollY;
-  bookEl2.innerHTML=s.html;
-  if(stage) stage.scrollTop=keepScroll;
-  window.scrollTo(winX, winY);
+  const anchor=captureScrollAnchor();   // undo/redo 후에도 보던 위치 유지 (블록 앵커 기준)
+  document.getElementById('book').innerHTML=s.html;
+  restoreScrollAnchor(anchor);
   if(s.deleted) MESSAGES.forEach((m,i)=>{ m.deleted=!!s.deleted[i]; });
   if(s.forcedHeader) MESSAGES.forEach((m,i)=>{
     const v=s.forcedHeader[i];
@@ -3463,8 +3517,7 @@ document.getElementById('book').addEventListener('mousedown',e=>{
   if(!isNaN(idx) && MESSAGES[idx]){
     syncEditsToModel();          // 삭제 전, 다른 메시지의 편집 내용을 모델에 보존
     MESSAGES[idx].deleted=true;
-    renderPreview();
-    snapshot();
+    snapshot(renderPreview());
   }
 });
 
@@ -3546,16 +3599,14 @@ function applyForcedHeader(idx, avatarIdx){
   if(!m || !a) return;
   syncEditsToModel();
   m.forcedHeader = { name: a.name||'', original: a.original||'' };
-  renderPreview();
-  snapshot();
+  snapshot(renderPreview());
 }
 function clearForcedHeader(idx){
   const m=MESSAGES[idx];
   if(!m) return;
   syncEditsToModel();
   delete m.forcedHeader;
-  renderPreview();
-  snapshot();
+  snapshot(renderPreview());
 }
 document.getElementById('speakerPopover').addEventListener('mousedown',e=>{
   e.stopPropagation();
@@ -3677,8 +3728,7 @@ document.addEventListener('keydown',e=>{
   });
   blkAnchorIdx=null;
   clearBlockSelection();
-  renderPreview();
-  snapshot();
+  snapshot(renderPreview());
 }, true);   // capture 단계 — contenteditable 의 기본 Backspace 처리보다 먼저 가로챈다
 // 편집 입력이 시작되면 블록 선택 해제 (혼동 방지)
 document.getElementById('book').addEventListener('input',()=>{ if(selectedBlockEls().length) clearBlockSelection(); });
@@ -3761,8 +3811,7 @@ function finishDrop(srcIdx, targetIdx, before){
   // before=false 면 대상 뒤에 삽입
   const insertAt = before ? t : t+1;
   arr.splice(insertAt, 0, item);
-  renderPreview();
-  snapshot();
+  snapshot(renderPreview());
 }
 
 /* ---------- events ---------- */
@@ -4149,7 +4198,7 @@ function buildFontPicker(pickEl){
       opt.classList.add('sel');
       pickEl.classList.remove('open');
       applyTextStyle();
-      if(MESSAGES.length){ renderPreview(); snapshot(); }
+      if(MESSAGES.length){ snapshot(renderPreview()); }
     });
     menu.appendChild(opt);
   });
@@ -4220,15 +4269,14 @@ function applyTextStyle(){
 });
 
 ['optRoll','optAvatar','optDividerShow'].forEach(id=>{
-  document.getElementById(id).addEventListener('change',()=>{if(MESSAGES.length){syncEditsToModel();renderPreview();snapshot();}});
+  document.getElementById(id).addEventListener('change',()=>{if(MESSAGES.length){syncEditsToModel();snapshot(renderPreview());}});
 });
 
 document.getElementById('applyAvatar').addEventListener('click',()=>{
   if(!MESSAGES.length){alert('먼저 파싱하세요.');return;}
   syncEditsToModel();
   renderAvatarList();
-  renderPreview();
-  snapshot();
+  snapshot(renderPreview());
 });
 
 function applyRollCss(){
@@ -4546,7 +4594,7 @@ function applyHtmlModal(){
   const checks = canBulk ? Array.from(document.querySelectorAll('#dsList .ds-chk:checked')) : [];
   if(!canBulk || checks.length===0){
     cur[htmlEditField]=newStruct;
-    closeHtmlModal(); renderPreview(); snapshot();
+    closeHtmlModal(); snapshot(renderPreview());
     return;
   }
 
@@ -4591,6 +4639,13 @@ function applyHtmlModal(){
       MESSAGES[i].rawHTML=balanceHtmlFragment(aligned);
       applied++; return;
     }
+    // [v7] 텍스트 변환 규칙 추론 폴백: 편집이 구조와 슬롯 수를 함께 바꿨어도
+    // (추출형: "── 01 ──"→"01" / 삽입형: "── 01 ──"→"── CHAPTER 01──") 규칙을 대상에 재적용
+    const templ=descTemplateMap(origStruct, newStruct, targetRaw);
+    if(templ!==null){
+      MESSAGES[i].rawHTML=balanceHtmlFragment(templ);
+      applied++; return;
+    }
     const origTexts=descTexts(targetRaw);
     if(origTexts.length!==newSlots){
       skipped++; skippedIdx.push(i);
@@ -4599,7 +4654,7 @@ function applyHtmlModal(){
         window.__skipDebug = window.__skipDebug || [];
         window.__skipDebug.push({ idx:i, orig:origStruct, edited:newStruct, target:targetRaw,
           targetSlots:origTexts.length, editedSlots:newSlots });
-        console.warn('[병합 v5] 건너뜀 #'+i, {원본:origStruct, 편집본:newStruct, 대상:targetRaw});
+        console.warn('[병합 v7] 건너뜀 #'+i, {원본:origStruct, 편집본:newStruct, 대상:targetRaw});
       }catch(_){ }
       return;
     }
@@ -4609,11 +4664,11 @@ function applyHtmlModal(){
   // 현재 편집 중인 메시지가 체크 안 됐더라도, 편집 창을 연 당사자이므로 항상 반영
   if(!checks.some(c=>+c.value===htmlEditIdx)){ cur[htmlEditField]=newStruct; applied++; }
 
-  closeHtmlModal(); renderPreview(); snapshot();
+  closeHtmlModal(); snapshot(renderPreview());
   if(skipped>0){
     // 진단 파일 자동 다운로드: 원본/편집본/건너뛴 대상들의 HTML 을 그대로 담는다.
     try{
-      const dbg={ version:"v5", when:new Date().toISOString(),
+      const dbg={ version:"v7", when:new Date().toISOString(),
         orig:origStruct, edited:newStruct,
         skipped: skippedIdx.map(ii=>({ idx:ii, raw:(MESSAGES[ii]||{}).rawHTML||'' })) };
       const blob=new Blob([JSON.stringify(dbg,null,2)],{type:'application/json'});
@@ -4622,12 +4677,12 @@ function applyHtmlModal(){
       document.body.appendChild(dl); dl.click(); dl.remove();
       setTimeout(()=>{ try{URL.revokeObjectURL(dl.href);}catch(_){ } },5000);
     }catch(_){ }
-    setTimeout(()=>alert('[병합 v5] 적용 완료: '+applied+'개 적용, '+skipped+'개 건너뜀 (#'+skippedIdx.join(', #')+')\n'
+    setTimeout(()=>alert('[병합 v7] 적용 완료: '+applied+'개 적용, '+skipped+'개 건너뜀 (#'+skippedIdx.join(', #')+')\n'
       +'건너뛴 항목은 편집 내용의 변경점을 대응시킬 수 없었습니다.\n'
       +'진단 파일(merge-debug.json)이 다운로드되었습니다 — 이 파일을 개발자에게 전달하면 원인을 바로 찾을 수 있습니다.'),0);
   } else if(applied>1){
     // 성공 시에도 결과를 알려준다 (2개 이상 일괄 적용일 때)
-    setTimeout(()=>alert('[병합 v5] 적용 완료: '+applied+'개 모두 적용되었습니다.'),0);
+    setTimeout(()=>alert('[병합 v7] 적용 완료: '+applied+'개 모두 적용되었습니다.'),0);
   }
 }
 
@@ -4871,6 +4926,114 @@ function descTexts(html){
   })(tmp);
   return out;
 }
+
+/* [병합 v7 폴백] 슬롯 수가 달라진 편집도 일괄 적용할 수 있게, '원본→편집본' 텍스트
+   변환 규칙을 슬롯 단위로 추론한다. 두 방향 모두 지원한다:
+     - 추출형: "─────── 01 ───────" → "01"           (편집본이 원본의 일부)
+     - 삽입형: "─────── 01 ───────" → "─────── CHAPTER 01───────"  (원본 일부가 편집본 안에 그대로 남고 앞뒤에 새 텍스트가 붙음)
+   먼저 두 문자열의 공통 접두/접미를 벗겨내 뼈대를 확인하고, 남은 가운데 부분에서
+   원본·편집본에 공통으로 들어있는 '가변 핵심'(예: 챕터 번호나 제목)을 찾아, 그 핵심을
+   기준으로 원본 쪽 앞뒤(preO/sufO)와 편집본 쪽 앞뒤(preN/sufN)를 각각 기록한다.
+   대상 텍스트에 적용할 때는 같은 뼈대·preO/sufO 로 대상의 가변 핵심을 추출한 뒤,
+   편집본 쪽 preN/sufN 로 다시 감싼다. */
+function _commonPrefixLen(a,b){
+  const n=Math.min(a.length,b.length);
+  let i=0; while(i<n && a[i]===b[i]) i++;
+  return i;
+}
+function _commonSuffixLen(a,b,maxLen){
+  let j=0; while(j<maxLen && a[a.length-1-j]===b[b.length-1-j]) j++;
+  return j;
+}
+/* a,b 사이의 최장 공통 부분 문자열(첫 번째로 발견되는 것). 없으면 ''. */
+function _longestCommonSubstring(a,b){
+  if(!a || !b) return '';
+  const la=a.length, lb=b.length;
+  let best=0, bestEnd=0;
+  let prev=new Array(lb+1).fill(0);
+  for(let i=1;i<=la;i++){
+    const cur=new Array(lb+1).fill(0);
+    for(let j=1;j<=lb;j++){
+      if(a[i-1]===b[j-1]){
+        cur[j]=prev[j-1]+1;
+        if(cur[j]>best){ best=cur[j]; bestEnd=i; }
+      }
+    }
+    prev=cur;
+  }
+  return best>0 ? a.slice(bestEnd-best, bestEnd) : '';
+}
+/* origText → newText 변화 규칙을 추론한다. 성공 시 규칙 객체, 실패 시 null. */
+function descDeriveTextRule(origText, newText){
+  if(origText===newText) return {type:'identity'};
+  const p=_commonPrefixLen(origText,newText);
+  const maxSuf=Math.min(origText.length-p, newText.length-p);
+  const s=_commonSuffixLen(origText,newText,maxSuf);
+  const pStr=origText.slice(0,p), sStr = s>0 ? origText.slice(origText.length-s) : '';
+  const aMid=origText.slice(p, origText.length-s);
+  const bMid=newText.slice(p, newText.length-s);
+  if(bMid===''){
+    if(aMid==='') return {type:'identity'};
+    return {type:'wrap', p:pStr, s:sStr};   // 가변부가 통째로 삭제된 편집 — 대상의 가변부도 버린다
+  }
+  if(aMid==='') return null;   // 원본에 없던 내용이 통째로 새로 생김 → 대상별 값을 추정할 수 없음
+  const core=_longestCommonSubstring(aMid,bMid);
+  if(!core) return null;
+  const posA=aMid.indexOf(core), posB=bMid.indexOf(core);
+  return { type:'core', p:pStr, s:sStr,
+    preO:aMid.slice(0,posA), sufO:aMid.slice(posA+core.length),
+    preN:bMid.slice(0,posB), sufN:bMid.slice(posB+core.length) };
+}
+/* 규칙을 대상 텍스트에 적용한다. 대상이 규칙의 뼈대와 맞지 않으면 null(적용 불가). */
+function descApplyTextRule(rule, target){
+  if(!rule) return null;
+  if(rule.type==='identity') return target;
+  if(!target.startsWith(rule.p) || !target.endsWith(rule.s) || target.length<rule.p.length+rule.s.length) return null;
+  const mid=target.slice(rule.p.length, target.length-rule.s.length);
+  if(rule.type==='wrap') return rule.p+rule.s;
+  if(!mid.startsWith(rule.preO) || !mid.endsWith(rule.sufO) || mid.length<rule.preO.length+rule.sufO.length) return null;
+  const core=mid.slice(rule.preO.length, mid.length-rule.sufO.length);
+  return rule.p+rule.preN+core+rule.sufN+rule.s;
+}
+function descTemplateMap(origHtml, newHtml, targetHtml){
+  const origT=descTexts(origHtml), newT=descTexts(newHtml), tgtT=descTexts(targetHtml);
+  if(!newT.length) return null;
+  if(tgtT.length!==origT.length) return null;   // 위치 대응 불가
+  const used=new Set();
+  const outTexts=new Array(newT.length);
+  for(let k=0;k<newT.length;k++){
+    const nt=newT[k];
+    let found=-1, rule=null;
+    // 1) 정확 일치 (아직 매핑 안 된 원본 슬롯 우선)
+    for(let i=0;i<origT.length;i++){
+      if(used.has(i)) continue;
+      if(origT[i]===nt){ found=i; rule={type:'identity'}; break; }
+    }
+    // 1b) 공백만 다른 일치
+    if(found<0 && nt.trim()!==''){
+      const ntt=nt.trim();
+      for(let i=0;i<origT.length;i++){
+        if(used.has(i)) continue;
+        if(origT[i].trim()===ntt){ found=i; rule={type:'identity'}; break; }
+      }
+    }
+    // 2) 일반 규칙 추론 (추출형·삽입형 모두 지원). 길이 1짜리 장식용 슬롯(".", " " 등)은
+    //    가짜 매칭을 방지하기 위해 후보에서 제외한다.
+    if(found<0 && nt.length>=2){
+      for(let i=0;i<origT.length;i++){
+        if(used.has(i) || origT[i].length<2) continue;
+        const r=descDeriveTextRule(origT[i], nt);
+        if(r){ found=i; rule=r; break; }
+      }
+    }
+    if(found<0) return null;   // 이 텍스트가 어디서 왔는지 알 수 없음 → 규칙 추론 실패
+    used.add(found);
+    const applied=descApplyTextRule(rule, tgtT[found]);
+    if(applied===null) return null;   // 대상이 이 규칙의 뼈대와 맞지 않음 → 이 대상은 폴백 실패
+    outTexts[k]=applied;
+  }
+  return descApplyTexts(newHtml, outTexts).html;
+}
 // 구조(newHtml)에 텍스트 배열을 순서대로 주입해 새 HTML 을 만든다.
 function descApplyTexts(newHtml, texts){
   const tmp=document.createElement('div');
@@ -4994,8 +5157,7 @@ function insertMessageAfter(msgObj){
   syncEditsToModel();
   const at = Math.max(0, insertAfterIdx+1);
   MESSAGES.splice(at, 0, msgObj);
-  renderPreview();
-  snapshot();
+  snapshot(renderPreview());
 }
 
 /* 핸드아웃 템플릿: 입력한 제목/부제/본문으로 3단 박스 생성 */
@@ -5366,7 +5528,7 @@ function buildPageCss(forEpub){
 '.msg.msg-general .msg-body{margin-top:3px;padding-left:var(--indent, calc(var(--av) + var(--avgap)));line-height:var(--user-lh)}\n'+
 '.msg.msg-narration .msg-body{padding-left:var(--indent, calc(var(--av) + var(--avgap)));font-family:var(--user-font-narr);font-weight:400;line-height:var(--user-lh-narr)}\n'+
 '#book.no-avatar{--indent:24px}\n'+
-'#book.no-avatar .msg .msg-head{padding-left:6px}\n'+
+'#book.no-avatar .msg .msg-head{padding-left:12px}\n'+
 '.msg.msg-whisper .speaker, .msg.msg-whisper .msg-body{color:#616161}\n'+
 '.msg.msg-insert .msg-body{padding-left:0;font-family:inherit}\n'+
 '.msg-body img{display:block;margin:6px auto;max-width:100%;height:auto}\n'+
