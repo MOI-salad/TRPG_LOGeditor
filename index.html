@@ -793,6 +793,111 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     font-size:12.5px;line-height:1.6;color:var(--ink)}
   .css-check.ok{--cc-accent:#2f7d4f; --cc-bg:#f1f8f3; --cc-border:#bcdcc8}
   .css-check.warn{--cc-accent:#9a5f0e; --cc-bg:#fdf6ea; --cc-border:#e8c88d}
+  /* ==========================================================================
+     목차(TOC) — 좌측 목차 레일 · 생성 버튼 · 설정 창
+     색은 전부 「팔레트 A」토큰만 쓴다 → 다크 모드가 자동으로 따라온다.
+     (미리보기 표식은 편집기 전용이라 buildPageCss 로 내보내지 않는다)
+     ========================================================================== */
+  /* 목차 레일과 미리보기는 같은 y 에서 시작한다.
+     레일의 왼쪽 시작점은 상단 바(.toolbar) 시작점에서 4px 안쪽. */
+  .stage-row{
+    display:flex;align-items:flex-start;gap:var(--s4);
+    padding:0 var(--s4) 0 4px}
+  .stage-row > #book{flex:1 1 auto;min-width:0;margin-top:0}
+
+  .toc-rail{
+    flex:none;width:178px;align-self:flex-start;margin-top:0;
+    position:sticky;top:calc(var(--dock-h,84px) + var(--s2));
+    display:flex;flex-direction:column;gap:var(--s2);
+    padding:16px;border:1px solid var(--line);border-radius:var(--r-face);
+    background:var(--surface);font-family:var(--kr)}
+  .toc-rail-title{
+    font-size:var(--t-label);font-weight:700;color:var(--ink);letter-spacing:-.01em}
+  .toc-rail-count{
+    display:flex;align-items:baseline;gap:6px;
+    font-size:var(--t-caption);font-weight:600;color:var(--ink)}
+  .toc-rail-count .toc-count{font-weight:400;color:var(--muted)}
+  .toc-rail-list{
+    display:flex;flex-direction:column;gap:2px;
+    max-height:calc(100vh - var(--dock-h,84px) - 200px);overflow:auto;
+    margin:var(--s1) 0}
+  .toc-rail-empty{
+    padding:var(--s3) 2px;font-size:var(--t-caption);line-height:1.6;color:var(--muted)}
+
+  .toc-item{
+    display:flex;align-items:center;gap:4px;
+    padding:4px 6px;border:1px solid transparent;border-radius:var(--r-chip);
+    background:transparent;transition:var(--t-fast)}
+  .toc-item:hover{background:var(--accent-100);border-color:var(--accent-400)}
+  .toc-item-text{
+    flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:var(--t-caption);line-height:1.6;color:var(--sub);
+    cursor:pointer;text-decoration:none;transition:var(--t-fast)}
+  .toc-item-text:hover{color:var(--point);text-decoration:underline}
+  .toc-item-acts{display:none;gap:2px;flex:none}
+  .toc-item:hover .toc-item-acts{display:flex}
+  .toc-act{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:18px;height:18px;padding:0;flex:none;
+    border:none;border-radius:3px;background:transparent;color:var(--muted);
+    cursor:pointer;transition:var(--t-fast)}
+  .toc-act:hover{color:var(--point)}
+  .toc-act.toc-del:hover{color:var(--danger)}
+  .toc-act svg{pointer-events:none}
+
+  /* 목차 생성하기 — 켜지면 포인트색(보라)으로 채워진다 */
+  /* 꺼짐 = 잉크 면(라이트 #22231f · 다크에선 밝은 면 + 어두운 글자) · 테두리 없음
+     켜짐 = 포인트색 면 */
+  .toc-make-btn{
+    width:100%;height:var(--h-dense);min-height:var(--h-dense);padding:0 var(--s2);
+    border:none;border-radius:var(--r-ctl);
+    background:var(--btn-fill);color:var(--btn-fill-ink);
+    font-family:var(--kr);font-size:var(--t-caption);font-weight:600;
+    cursor:pointer;transition:var(--t-fast)}
+  .toc-make-btn:hover{background:var(--btn-fill-hover);color:var(--btn-fill-ink)}
+  .toc-make-btn.on,.toc-make-btn.on:hover{
+    background:var(--accent-400);color:var(--on-fill)}
+  .toc-make-btn:focus-visible{outline:2px solid var(--point);outline-offset:2px}
+
+  /* 목차 생성 모드 — 미리보기에서 클릭 대상임을 알린다 */
+  body.tocpick-on #book,
+  body.tocpick-on #book .msg,
+  body.tocpick-on #book .desc-banner,
+  body.tocpick-on #book .emote-line{cursor:pointer}
+  body.tocpick-on #book > .msg:hover,
+  body.tocpick-on #book > .desc-banner:hover,
+  body.tocpick-on #book > .emote-line:hover{
+    outline:1.2px dashed var(--accent-400);outline-offset:3px;
+    background:var(--accent-100)}
+  /* 목차로 지정된 블록에는 별도 표식을 두지 않는다.
+     (이동했을 때의 짧은 점멸만 남긴다 — 편집기 전용이라 내보내지 않는다) */
+  #book [data-toc].toc-flash{animation:tocFlash 1.2s ease-out}
+  @keyframes tocFlash{
+    0%{background:var(--accent-100)}
+    100%{background:transparent}}
+
+  /* 목차 설정 창 */
+  #tocModal .modal-pane{display:flex;flex-direction:column;gap:0}
+  .toc-input-row{display:flex;gap:var(--s2);align-items:center}
+  .toc-input-row input[type=text]{
+    flex:1;min-width:0;height:var(--h-lg);min-height:var(--h-lg);
+    font-size:var(--t-body);border-radius:var(--r-ctl)}
+  .toc-input-row button{
+    flex:none;height:var(--h-lg);min-height:var(--h-lg);padding:0 var(--s5);margin:0;
+    border-radius:var(--r-ctl);font-size:var(--t-body);font-weight:600;
+    background:var(--btn-fill);color:var(--btn-fill-ink);border:1px solid transparent;cursor:pointer;
+    font-family:var(--kr);transition:var(--t-fast)}
+  .toc-input-row button:hover{background:var(--btn-fill-hover);color:var(--btn-fill-ink)}
+  .toc-hint{margin:var(--s3) 0 0;font-family:var(--kr);font-size:var(--t-caption);
+    line-height:1.6;color:var(--muted)}
+
+  @media (max-width:1180px){
+    .stage-row{flex-direction:column;gap:var(--s3)}
+    .toc-rail{width:100%;position:static;flex-direction:row;flex-wrap:wrap;align-items:center}
+    .toc-rail-list{flex:1 1 100%;max-height:180px}
+    .toc-make-btn{width:auto;padding:0 var(--s4)}
+  }
+
   html[data-theme="dark"] .css-check.ok{--cc-accent:#86cca0; --cc-bg:#1e2a23; --cc-border:#33513e}
   html[data-theme="dark"] .css-check.warn{--cc-accent:#e3ab5e; --cc-bg:#2a2419; --cc-border:#5a4a2b}
   .css-check .cc-title{
@@ -1915,6 +2020,25 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </div>
 
 <!-- 핸드아웃 입력 모달 -->
+<!-- 목차 설정 창 — 목차 생성 모드에서 미리보기를 클릭하거나, 목차 항목의 수정 아이콘을 누르면 열린다 -->
+<div class="modal-overlay" id="tocModal" role="dialog" aria-modal="true" aria-label="목차 설정">
+  <div class="modal-win" style="width:560px;height:auto;max-height:88vh">
+    <div class="modal-head">
+      <span class="mtitle">목차 설정</span>
+      <span class="mspacer"></span>
+      <button class="sheet-x" id="tocModalClose" type="button" aria-label="닫기"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal-pane">
+      <label for="tocNameInput">목차 이름</label>
+      <div class="toc-input-row">
+        <input type="text" id="tocNameInput" placeholder="목차 이름을 입력하세요">
+        <button type="button" id="tocSaveBtn">추가</button>
+      </div>
+      <p class="toc-hint" id="tocHint">선택한 메시지의 텍스트가 기본값으로 들어갑니다. 그대로 두거나 자유롭게 고쳐 쓰세요.</p>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="handoutModal" role="dialog" aria-modal="true" aria-label="핸드아웃 삽입">
   <div class="modal-win" style="width:520px;height:auto;max-height:88vh">
     <div class="modal-head">
@@ -2364,10 +2488,18 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <style id="liveRollCss"></style>
     <style id="liveUserCss"></style>
     <style id="liveDescFont"></style>
+    <div class="stage-row">
+      <aside class="toc-rail" id="tocRail" aria-label="목차">
+        <div class="toc-rail-title">목차</div>
+        <div class="toc-rail-count">설정한 목차 <span class="toc-count" id="tocCount">0개</span></div>
+        <div class="toc-rail-list" id="tocList"></div>
+        <button type="button" class="toc-make-btn" id="tocMakeBtn" aria-pressed="false">목차 생성하기</button>
+      </aside>
     <div id="book"><div class="placeholder">
       <b>아직 불러온 로그가 없습니다</b>
       <span>왼쪽에 채팅 HTML을 붙여넣고 변환하기를 누르세요.<br>붙여넣기 칸을 두 번 누르면 큰 편집 창이 열립니다.</span>
     </div></div>
+    </div>
   </main>
 </div>
 
@@ -4843,6 +4975,11 @@ function renderAvatarList(){
 
 /* ---------- build ---------- */
 function buildBook(forExport){
+  /* 목차 앵커 준비 — 메시지마다 고유 uid 를 보장하고, 목차로 지정된 uid 는
+     id="toc-N" 앵커를 받는다. 이 앵커가 미리보기 이동·HTML·EPUB 목차의 대상이다.
+     (스크립트 평가 도중 호출되는 경우를 대비해 try 로 감싼다) */
+  let TOC_ANCHOR = new Map();
+  try{ ensureMessageUids(); pruneToc(); TOC_ANCHOR = tocAnchorMap(); }catch(_){ }
   const optRoll    = document.getElementById('optRoll').checked;
   const optAvatar  = document.getElementById('optAvatar').checked;
   const optDividerShow = document.getElementById('optDividerShow').checked;
@@ -4903,6 +5040,9 @@ function buildBook(forExport){
     const delBtn = forExport ? '' : '<button class="msg-del" data-idx="'+idx+'" title="이 메시지 삭제" aria-label="삭제">×</button>'+
       '<button class="msg-drag" data-idx="'+idx+'" draggable="true" title="드래그하여 순서 이동" aria-label="이동">\u283f</button>';
     const dataIdx = forExport ? '' : ' data-idx="'+idx+'"';
+    // 목차 앵커 — 내보내기(HTML·EPUB)는 미리보기 DOM 을 복제해 만들므로 여기서 한 번만 붙이면 된다.
+    const _aid = TOC_ANCHOR.get(m0.uid);
+    const tocAttr = _aid ? (' id="'+_aid+'" data-toc="1"') : '';
     if(m.type==='desc'){
       // desc 배너: 본문 편집 모드에서 텍스트를 직접 고칠 수 있게 contenteditable 을 부여한다.
       // 인라인 스타일(<a style>)은 텍스트만 편집하는 한 그대로 보존된다. 저장은 syncEditsToModel 에서
@@ -4910,7 +5050,7 @@ function buildBook(forExport){
       if(gapBetween(prevBlockType,'descemote')) html += '<div class="msg-gap"></div>';
       const safeRaw = (typeof balanceHtmlFragment==='function') ? balanceHtmlFragment(m.rawHTML||'') : (m.rawHTML||'');
       const inner = forExport ? safeRaw : ('<span class="descedit-body">'+safeRaw+'</span>');
-      html += '<div class="desc-banner"'+dataIdx+ce+'>'+delBtn+inner+'</div>';
+      html += '<div class="desc-banner"'+dataIdx+tocAttr+ce+'>'+delBtn+inner+'</div>';
       lastRenderedSpeaker = null; lastRenderedKey = null;  // 배너를 지나면 연속성 끊김 → 다음 동일 화자도 헤더 재출력
       suppressSep = true;          // 배너 직후 첫 캐릭터 대사엔 가름선 생략
       prevBlockType = 'descemote';
@@ -4921,7 +5061,7 @@ function buildBook(forExport){
       if(gapBetween(prevBlockType,'descemote')) html += '<div class="msg-gap"></div>';
       const safeRaw = (typeof balanceHtmlFragment==='function') ? balanceHtmlFragment(m.rawHTML||'') : (m.rawHTML||'');
       const inner = forExport ? safeRaw : ('<span class="descedit-body">'+safeRaw+'</span>');
-      html += '<div class="emote-line"'+dataIdx+ce+'>'+delBtn+inner+'</div>';
+      html += '<div class="emote-line"'+dataIdx+tocAttr+ce+'>'+delBtn+inner+'</div>';
       lastRenderedSpeaker = null; lastRenderedKey = null;  // emote 블록을 지나면 다음 동일 화자도 헤더 재출력
       suppressSep = true;          // emote 직후 첫 캐릭터 대사엔 가름선 생략
       prevBlockType = 'descemote';
@@ -5018,7 +5158,7 @@ function buildBook(forExport){
 
     if(m.isRoll && optRoll){
       // 롤 테이블: 헤더는 동일 정렬, 테이블 본문은 메시지 전체 폭 사용
-      html += '<div class="msg msg-roll"'+dataIdx+'>'+delBtn+header+'<div class="roll-body">'+m.rollHTML+'</div></div>';
+      html += '<div class="msg msg-roll"'+dataIdx+tocAttr+'>'+delBtn+header+'<div class="roll-body">'+m.rollHTML+'</div></div>';
       // 다이스 굴림(롤)은 장면을 끊는 연출로 취급 → 뒤따르는 같은 화자도 헤더를 다시 보여준다.
       lastRenderedSpeaker = null; lastRenderedKey = null;
       prevBlockType = curBlockType;
@@ -5029,7 +5169,7 @@ function buildBook(forExport){
     let cls = isNarration ? 'msg msg-general msg-narration' : 'msg msg-general';
     if(m.whisper) cls += ' msg-whisper';   // 귓속말: 회색(#616161) 스타일
     if(m.insert)  cls += ' msg-insert';    // 우클릭 삽입물(이미지/핸드아웃): 전체폭·기본폰트
-    html += '<div class="'+cls+'"'+dataIdx+'>'+delBtn+header+body+'</div>';
+    html += '<div class="'+cls+'"'+dataIdx+tocAttr+'>'+delBtn+header+body+'</div>';
     prevBlockType = curBlockType;
     return;
   });
@@ -5141,6 +5281,298 @@ function syncEditsToModel(){
   DIRTY_IDX.clear();
 }
 
+/* ==========================================================================
+   목차(TOC)
+   ----------------------------------------------------------------------------
+   저장 단위는 "메시지 배열의 인덱스"가 아니라 메시지 객체에 붙인 고유 id(uid) 다.
+   삽입·삭제·드래그 이동으로 인덱스는 계속 밀리지만 uid 는 변하지 않으므로,
+   목차가 엉뚱한 메시지를 가리키는 일이 없다.
+   지정된 메시지 블록에는 렌더 단계에서 id="toc-N" 앵커가 붙고, 이 앵커가
+   미리보기 이동 · HTML 내보내기 · EPUB nav(+ncx) 에 모두 그대로 쓰인다.
+
+   조작 흐름
+     ① 왼쪽 목차 레일의 '목차 생성하기' 를 켠다 (버튼이 포인트색으로 채워진다)
+     ② 미리보기 본문에서 메시지를 클릭 → 목차 설정 창
+     ③ '추가' 를 누르면 레일 목록에 쌓인다
+     ④ 목록 항목: 글자에 호버 → 포인트색 + 밑줄, 클릭하면 그 위치로 이동
+                  항목에 호버 → 배경·테두리 강조 + 우측에 수정·삭제 아이콘
+   ========================================================================== */
+let TOC = [];            // [{aid:'toc-1', uid:'u12', title:'...'}] — 표시는 항상 본문 순서
+let TOC_SEQ = 0;         // 앵커 번호 시퀀스
+let UID_SEQ = 0;         // 메시지 uid 시퀀스
+let tocPickOn = false;   // 목차 생성 모드
+let tocEditUid = null;   // 지금 목차 창에서 다루는 메시지 uid
+
+/* 모든 메시지에 uid 를 보장한다 (파싱·삽입·불러오기 등 어느 경로로 들어왔든) */
+function ensureMessageUids(){
+  for(const m of MESSAGES){ if(m && !m.uid) m.uid = 'u' + (++UID_SEQ); }
+}
+function tocUidIndexMap(){
+  const map=new Map();
+  MESSAGES.forEach((m,i)=>{ if(m && m.uid) map.set(m.uid, i); });
+  return map;
+}
+/* 사라진 메시지(삭제·숨김)를 가리키는 목차를 정리하고, 본문 순서로 재정렬한다 */
+function pruneToc(){
+  if(!TOC.length) return;
+  const map=tocUidIndexMap();
+  TOC = TOC.filter(e=>{
+    const i=map.get(e.uid);
+    if(i===undefined) return false;
+    const m=MESSAGES[i];
+    return !!m && !m.deleted && !m.isHidden;
+  });
+  TOC.sort((a,b)=> (map.get(a.uid)||0) - (map.get(b.uid)||0));
+}
+function tocAnchorMap(){
+  const map=new Map();
+  TOC.forEach(e=>map.set(e.uid, e.aid));
+  return map;
+}
+function tocFindByUid(uid){ return TOC.find(e=>e.uid===uid) || null; }
+function tocFindByAid(aid){ return TOC.find(e=>e.aid===aid) || null; }
+
+/* 메시지 블록에서 목차 이름 기본값을 뽑는다 — 본문 텍스트를 한 줄로 정리 */
+function tocDefaultTitle(uid){
+  const idx=tocUidIndexMap().get(uid);
+  let text='';
+  const el = document.querySelector('#book > [data-idx="'+idx+'"]');
+  if(el){
+    const clone=el.cloneNode(true);
+    clone.querySelectorAll('.msg-del,.msg-drag,.msg-head,.by,.tstamp').forEach(n=>n.remove());
+    const body=clone.querySelector('.msg-body') || clone;
+    text = (body.textContent||'');
+  } else {
+    const m=MESSAGES[idx];
+    if(m){
+      const tmp=document.createElement('div');
+      tmp.innerHTML = m.bodyHTML || m.rawHTML || m.rollHTML || '';
+      text = tmp.textContent || '';
+    }
+  }
+  text = text.replace(/\s+/g,' ').trim();
+  if(text.length>60) text = text.slice(0,60).trim() + '…';
+  return text;
+}
+
+/* ---------- 목차 레일 ---------- */
+const TOC_ICON_EDIT='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.6H5.7A1.7 1.7 0 0 0 4 6.3v12A1.7 1.7 0 0 0 5.7 20h12a1.7 1.7 0 0 0 1.7-1.7v-6.8"/><path d="M17.9 3.6a1.9 1.9 0 0 1 2.7 2.7L12 14.9l-3.6.9.9-3.6 8.6-8.6z"/></svg>';
+const TOC_ICON_DEL='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/><path d="M6.4 7l.8 12a1.6 1.6 0 0 0 1.6 1.5h6.4a1.6 1.6 0 0 0 1.6-1.5l.8-12"/><path d="M10.2 11v6M13.8 11v6"/></svg>';
+
+function renderTocList(){
+  pruneToc();
+  const box=document.getElementById('tocList');
+  const cnt=document.getElementById('tocCount');
+  if(!box) return;
+  if(cnt) cnt.textContent = TOC.length + '개';
+  if(!TOC.length){
+    box.innerHTML='<div class="toc-rail-empty">아직 목차가 없습니다.</div>';
+    return;
+  }
+  box.innerHTML = TOC.map(e=>
+    '<div class="toc-item" data-aid="'+esc(e.aid)+'">'+
+      '<span class="toc-item-text" title="'+esc(e.title||'')+'" role="link" tabindex="0">'+esc(e.title||'(제목 없음)')+'</span>'+
+      '<span class="toc-item-acts">'+
+        '<button type="button" class="toc-act toc-edit" title="수정" aria-label="수정">'+TOC_ICON_EDIT+'</button>'+
+        '<button type="button" class="toc-act toc-del" title="삭제" aria-label="삭제">'+TOC_ICON_DEL+'</button>'+
+      '</span>'+
+    '</div>'
+  ).join('');
+}
+
+/* 지정한 메시지 위치로 이동
+   #book > .msg 에는 content-visibility:auto 가 걸려 있어 화면 밖 블록 높이가 추정치다.
+   한 번만 스크롤하면 그 추정치가 실제 높이로 바뀌면서 목표가 위로 밀려 "다음 메시지"가
+   보이게 된다. 그래서 스크롤 → 레이아웃 확정 → 재정렬을 몇 프레임에 걸쳐 반복한다.
+   상단 고정 툴바에 가려지지 않도록 툴바 높이만큼 여유도 둔다. */
+function tocJumpTo(aid){
+  const el=document.getElementById(aid);
+  if(!el){ renderTocList(); return; }
+  const stage=el.closest('.stage');
+  if(!stage){ el.scrollIntoView({block:'start'}); return; }
+  const dock=document.querySelector('.toolbar-dock');
+  const offset=(dock? dock.getBoundingClientRect().height : 0) + 12;
+  const align=()=>{
+    const delta=el.getBoundingClientRect().top - stage.getBoundingClientRect().top - offset;
+    if(Math.abs(delta) > 1) stage.scrollTop += delta;
+  };
+  align();
+  requestAnimationFrame(()=>{ align();
+    requestAnimationFrame(()=>{ align(); setTimeout(align, 60); });
+  });
+  el.classList.remove('toc-flash');
+  void el.offsetWidth;
+  el.classList.add('toc-flash');
+  setTimeout(()=>el.classList.remove('toc-flash'), 1400);
+}
+
+/* ---------- 목차 설정 창 ---------- */
+function openTocModal(uid){
+  tocEditUid = uid;
+  const input=document.getElementById('tocNameInput');
+  const cur=tocFindByUid(uid);
+  input.value = cur ? (cur.title||'') : tocDefaultTitle(uid);
+  document.getElementById('tocSaveBtn').textContent = cur ? '수정' : '추가';
+  document.getElementById('tocHint').textContent = cur
+    ? '이미 목차로 지정된 메시지입니다. 이름을 고친 뒤 수정을 누르세요.'
+    : '선택한 메시지의 텍스트가 기본값으로 들어갑니다. 그대로 두거나 자유롭게 고쳐 쓰세요.';
+  document.getElementById('tocModal').classList.add('open');
+  setTimeout(()=>{ input.focus(); input.select(); }, 0);
+}
+function closeTocModal(){
+  document.getElementById('tocModal').classList.remove('open');
+  tocEditUid = null;
+}
+function tocSaveCurrent(){
+  if(!tocEditUid) return;
+  const input=document.getElementById('tocNameInput');
+  const title=(input.value||'').replace(/\s+/g,' ').trim();
+  if(!title){ input.focus(); return; }
+  const cur=tocFindByUid(tocEditUid);
+  if(cur) cur.title=title;
+  else TOC.push({ aid:'toc-'+(++TOC_SEQ), uid:tocEditUid, title });
+  applyTocChange();
+  closeTocModal();
+}
+function tocRemove(aid){
+  TOC = TOC.filter(e=>e.aid!==aid);
+  applyTocChange();
+}
+/* 목차가 바뀌면 앵커가 달라지므로 미리보기를 다시 그리고 히스토리에 남긴다 */
+function applyTocChange(){
+  if(typeof syncEditsToModel==='function') syncEditsToModel();
+  pruneToc();
+  snapshot(renderPreview());
+  renderTocList();
+}
+
+/* ==========================================================================
+   편집 모드 조정기 — 상단바 네 버튼 + 목차 생성하기 중 "하나만" 켜진다
+   mode: null | 'edit' | 'html' | 'image' | 'handout' | 'toc'
+   ========================================================================== */
+function setEditorMode(mode){
+  // 본문 편집
+  const wantEdit = (mode==='edit');
+  if(typeof editOn!=='undefined' && editOn!==wantEdit){
+    editOn = wantEdit;
+    document.querySelectorAll('#book [contenteditable]')
+      .forEach(el=>el.setAttribute('contenteditable', wantEdit?'true':'false'));
+    document.body.classList.toggle('edit-on', wantEdit);
+  }
+  const bEdit=document.getElementById('toggleEdit');
+  if(bEdit) bEdit.classList.toggle('active', wantEdit);
+
+  // 메시지 HTML 편집
+  htmlEditOn = (mode==='html');
+  document.body.classList.toggle('htmledit-on', htmlEditOn);
+  const bHtml=document.getElementById('toggleHtmlEdit');
+  if(bHtml) bHtml.classList.toggle('active', htmlEditOn);
+
+  // 이미지 / 핸드아웃 삽입
+  insertMode = (mode==='image' || mode==='handout') ? mode : null;
+  document.body.classList.toggle('insert-mode', !!insertMode);
+  const bImg=document.getElementById('toggleImgInsert');
+  const bHand=document.getElementById('toggleHandoutInsert');
+  if(bImg)  bImg.classList.toggle('active', insertMode==='image');
+  if(bHand) bHand.classList.toggle('active', insertMode==='handout');
+  if(!insertMode && !htmlEditOn && typeof removeInsertBar==='function') removeInsertBar();
+
+  // 목차 생성
+  tocPickOn = (mode==='toc');
+  document.body.classList.toggle('tocpick-on', tocPickOn);
+  const bToc=document.getElementById('tocMakeBtn');
+  if(bToc){
+    bToc.classList.toggle('on', tocPickOn);
+    bToc.setAttribute('aria-pressed', String(tocPickOn));
+  }
+  if(!tocPickOn) closeTocModal();
+}
+/* 켜져 있으면 끄고, 아니면 켠다 */
+function toggleEditorMode(mode){
+  const cur = (typeof tocPickOn!=='undefined' && tocPickOn) ? 'toc'
+            : (typeof htmlEditOn!=='undefined' && htmlEditOn) ? 'html'
+            : (typeof insertMode!=='undefined' && insertMode) ? insertMode
+            : (typeof editOn!=='undefined' && editOn) ? 'edit' : null;
+  setEditorMode(cur===mode ? null : mode);
+}
+
+/* ---------- 이벤트 배선 ---------- */
+(function initToc(){
+  const makeBtn=document.getElementById('tocMakeBtn');
+  const list=document.getElementById('tocList');
+  const book=document.getElementById('book');
+  if(!makeBtn||!list||!book) return;
+
+  makeBtn.addEventListener('click', ()=>toggleEditorMode('toc'));
+
+  /* 목차 생성 모드: 미리보기 좌클릭 → 목차 설정 창
+     capture 로 잡아 본문 편집/삽입 클릭보다 먼저 처리한다. */
+  book.addEventListener('mousedown', e=>{
+    if(!tocPickOn || e.button!==0) return;
+    // 삭제(×)·드래그 손잡이는 원래 동작을 유지한다
+    if(e.target.closest && e.target.closest('.msg-del, .msg-drag')) return;
+    e.preventDefault(); e.stopPropagation();
+  }, true);
+  book.addEventListener('click', e=>{
+    if(!tocPickOn) return;
+    if(e.target.closest && e.target.closest('.msg-del, .msg-drag')) return;
+    const node=e.target.closest('#book > [data-idx]');
+    if(!node) return;
+    e.preventDefault(); e.stopPropagation();
+    ensureMessageUids();
+    const m=MESSAGES[+node.dataset.idx];
+    if(m) openTocModal(m.uid);
+  }, true);
+
+  /* 레일 목록 — 글자 클릭은 이동, 아이콘은 수정/삭제 */
+  list.addEventListener('click', e=>{
+    const item=e.target.closest('.toc-item');
+    if(!item) return;
+    const aid=item.dataset.aid;
+    if(e.target.closest('.toc-del')){ tocRemove(aid); return; }
+    if(e.target.closest('.toc-edit')){
+      const entry=tocFindByAid(aid);
+      if(entry) openTocModal(entry.uid);
+      return;
+    }
+    if(e.target.closest('.toc-item-text')){ tocJumpTo(aid); return; }
+  });
+  list.addEventListener('keydown', e=>{
+    if(e.key!=='Enter' && e.key!==' ') return;
+    const t=e.target.closest('.toc-item-text');
+    if(!t) return;
+    e.preventDefault();
+    tocJumpTo(t.closest('.toc-item').dataset.aid);
+  });
+
+  // 목차 설정 창
+  document.getElementById('tocModalClose').addEventListener('click', closeTocModal);
+  document.getElementById('tocModal').addEventListener('mousedown', e=>{
+    if(e.target.id==='tocModal') closeTocModal();
+  });
+  document.getElementById('tocSaveBtn').addEventListener('click', tocSaveCurrent);
+  document.getElementById('tocNameInput').addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); tocSaveCurrent(); }
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.key!=='Escape') return;
+    if(document.getElementById('tocModal').classList.contains('open')){ closeTocModal(); return; }
+    if(tocPickOn) setEditorMode(null);
+  });
+
+  renderTocList();
+
+  /* 고정 툴바 높이를 CSS 변수로 노출 — 목차 레일 sticky 위치와 이동 여백에 쓰인다 */
+  const dock=document.querySelector('.toolbar-dock');
+  const syncDockH=()=>{
+    if(!dock) return;
+    document.documentElement.style.setProperty('--dock-h', Math.round(dock.getBoundingClientRect().height)+'px');
+  };
+  syncDockH();
+  window.addEventListener('resize', syncDockH);
+  if(window.ResizeObserver && dock) new ResizeObserver(syncDockH).observe(dock);
+})();
+
 /* ---------- undo / redo history ----------
    스냅샷 = 현재 미리보기 본문(#book innerHTML) + MESSAGES 의 deleted 상태.
    텍스트 편집/삭제/옵션변경 등 모든 변경 후의 화면 상태를 그대로 저장·복원한다.       */
@@ -5155,9 +5587,14 @@ function snapshot(fromRenderHtml){
   // innerHTML 재직렬화 비용(수십~수백 ms)을 없앤다.
   const html = (typeof fromRenderHtml==='string') ? fromRenderHtml : book.innerHTML;
   const state={ html, deleted: MESSAGES.map(m=>!!m.deleted),
-    forcedHeader: MESSAGES.map(m=>(m.forcedHeader?{name:m.forcedHeader.name,original:m.forcedHeader.original}:null)) };
-  // 동일 상태면 저장 안 함
-  if(HPTR>=0 && HISTORY[HPTR] && HISTORY[HPTR].html===state.html) return;
+    forcedHeader: MESSAGES.map(m=>(m.forcedHeader?{name:m.forcedHeader.name,original:m.forcedHeader.original}:null)),
+    // 목차도 함께 저장 — 되돌리기로 목차 추가/삭제/이름변경까지 되돌아간다
+    toc: TOC.map(e=>({aid:e.aid, uid:e.uid, title:e.title})) };
+  // 동일 상태면 저장 안 함.
+  // 목차 이름만 바꾼 경우 본문 HTML(앵커 id)은 그대로라서 html 비교만으로는 걸러진다 →
+  // 목차 서명까지 함께 봐야 이름 변경도 되돌리기 대상이 된다.
+  if(HPTR>=0 && HISTORY[HPTR] && HISTORY[HPTR].html===state.html
+     && JSON.stringify(HISTORY[HPTR].toc||[])===JSON.stringify(state.toc)) return;
   HISTORY=HISTORY.slice(0,HPTR+1);
   HISTORY.push(state);
   if(HISTORY.length>30) HISTORY.shift();
@@ -5177,6 +5614,10 @@ function restoreState(s){
     const v=s.forcedHeader[i];
     if(!v) delete m.forcedHeader; else m.forcedHeader={name:v.name,original:v.original};
   });
+  if(s.toc){
+    TOC = s.toc.map(e=>({aid:e.aid, uid:e.uid, title:e.title}));
+    try{ renderTocList(); }catch(_){ }
+  }
   restoring=false;
 }
 function doUndo(){
@@ -5228,6 +5669,7 @@ document.getElementById('book').addEventListener('mousedown',e=>{
 let spPopoverIdx=-1;
 document.getElementById('book').addEventListener('contextmenu',e=>{
   // 다른 모드가 켜져 있으면 그 모드의 우클릭 동작에 양보한다
+  if(typeof tocPickOn!=='undefined' && tocPickOn) return;   // 목차 생성 모드 우선
   if(typeof htmlEditOn!=='undefined' && htmlEditOn) return;
   if(typeof insertMode!=='undefined' && insertMode) return;
   const node=e.target.closest('.msg[data-idx]');
@@ -5598,20 +6040,99 @@ document.getElementById('fileInput').addEventListener('change',async e=>{
       const html=await epubToHtml(await f.arrayBuffer());
       document.getElementById('srcInput').value=html;
       const skipped=window.__epubSkippedImages||0;
-      status.textContent = skipped>0
-        ? ('EPUB 변환 완료 — 용량 제한으로 이미지 '+skipped+'개는 원본 경로로 유지됨. "변환하기"를 누르세요.')
-        : 'EPUB 변환 완료 — "변환하기"를 누르세요.';
+      const bad=window.__epubBadChars||0;
+      status.textContent = bad>0
+        ? ('EPUB 변환 완료 — 다만 글자 '+bad+'자를 인코딩 판별에 실패해 \uFFFD 로 남겼습니다. 원본 EPUB 을 UTF-8 로 다시 저장하면 해결됩니다.')
+        : (skipped>0
+          ? ('EPUB 변환 완료 — 용량 제한으로 이미지 '+skipped+'개는 원본 경로로 유지됨. "변환하기"를 누르세요.')
+          : 'EPUB 변환 완료 — "변환하기"를 누르세요.');
     }catch(err){
       console.error(err);
       status.textContent='';
       alert('EPUB 변환 중 오류가 발생했습니다: '+err.message);
     }
   } else {
+    // HTML/TXT 도 UTF-8 로 단정하지 않는다 — EUC-KR 로 저장된 로그가 흔하다
     const r=new FileReader();
-    r.onload=()=>{document.getElementById('srcInput').value=r.result; status.textContent='파일을 불러왔습니다.';};
-    r.readAsText(f,'utf-8');
+    r.onload=()=>{
+      const txt=stripBomChar(decodeBytesSmart(new Uint8Array(r.result)));
+      document.getElementById('srcInput').value=txt;
+      const bad=countReplacementChars(txt);
+      status.textContent = bad>0
+        ? ('파일을 불러왔습니다 — 글자 '+bad+'자는 인코딩 판별에 실패했습니다.')
+        : '파일을 불러왔습니다.';
+    };
+    r.readAsArrayBuffer(f);
   }
 });
+
+/* ===== 바이트 → 문자열: 인코딩 자동 판별 디코더 ==========================
+   [이 편집기에서 "html이 특수기호로 깨지던" 원인]
+   JSZip 의 zipEntry.async('string') 은 내용을 무조건 UTF-8 로 해석한다. 그런데
+   EPUB 안의 XHTML·OPF·CSS 가 EUC-KR(CP949) 이나 UTF-16 이면 (한국에서 만든 EPUB·
+   한글 워드/이북 툴 출력물에 흔하다) 모든 한글 바이트가 UTF-8 규칙에 어긋나
+   U+FFFD(<>) 로 치환된다. 그 결과 입력창에 "특수기호 덩어리"가 들어오고,
+   그 상태로는 화자·본문 구조를 못 읽어 변환이 실패한다. stripXmlInvalid() 는
+   U+FFFD 를 XML 상 유효한 문자로 보기 때문에 이 단계에서 걸러지지도 않는다.
+   그래서 문자열이 아니라 바이트로 읽어, 아래 순서로 인코딩을 정한 뒤 디코드한다.
+     1) BOM (UTF-8 / UTF-16LE / UTF-16BE)
+     2) BOM 없는 UTF-16 추정 (ASCII 사이에 0x00 이 규칙적으로 낀다)
+     3) UTF-8 엄격 검사 통과 → UTF-8 (선언이 틀린 파일이 흔해 실측을 우선한다)
+     4) 문서 선언(<?xml encoding> / <meta charset>) → 실패 시 EUC-KR → 그 외
+   ======================================================================== */
+function sniffDeclaredCharset(bytes){
+  // 앞부분만 1바이트 인코딩으로 훑어 선언된 charset 을 찾는다 (본문은 건드리지 않음)
+  let head='';
+  try{ head=new TextDecoder('windows-1252').decode(bytes.subarray(0, 4096)); }
+  catch(_){ for(let i=0;i<Math.min(bytes.length,4096);i++) head+=String.fromCharCode(bytes[i]); }
+  const m1=head.match(/<\?xml[^>]*?encoding\s*=\s*["']([\w.:-]+)["']/i);
+  if(m1) return m1[1];
+  const m2=head.match(/<meta[^>]+charset\s*=\s*["']?([\w.:-]+)/i);
+  if(m2) return m2[1];
+  const m3=head.match(/@charset\s+["']([\w.:-]+)["']/i);
+  if(m3) return m3[1];
+  return '';
+}
+function decodeBytesSmart(bytes){
+  if(!bytes || !bytes.length) return '';
+  const b=bytes;
+  // 1) BOM
+  if(b.length>=3 && b[0]===0xEF && b[1]===0xBB && b[2]===0xBF)
+    return new TextDecoder('utf-8').decode(b.subarray(3));
+  if(b.length>=2 && b[0]===0xFF && b[1]===0xFE)
+    return new TextDecoder('utf-16le').decode(b.subarray(2));
+  if(b.length>=2 && b[0]===0xFE && b[1]===0xFF)
+    return new TextDecoder('utf-16be').decode(b.subarray(2));
+  // 2) BOM 없는 UTF-16 — 앞 200바이트에서 짝/홀수 자리 0x00 비율로 판단
+  {
+    const n=Math.min(b.length, 200);
+    let evenZero=0, oddZero=0;
+    for(let i=0;i<n;i++){ if(b[i]===0){ if(i%2) oddZero++; else evenZero++; } }
+    if(oddZero > n*0.3 && evenZero < n*0.05){ try{ return new TextDecoder('utf-16le').decode(b); }catch(_){ } }
+    if(evenZero > n*0.3 && oddZero < n*0.05){ try{ return new TextDecoder('utf-16be').decode(b); }catch(_){ } }
+  }
+  // 3) UTF-8 로 깨짐 없이 읽히면 UTF-8 이다
+  try{ return new TextDecoder('utf-8',{fatal:true}).decode(b); }catch(_){ }
+  // 4) 선언된 인코딩 → 한국어권 관례(EUC-KR/CP949) → 서유럽
+  const declared=sniffDeclaredCharset(b);
+  const tries=[declared, 'euc-kr', 'shift_jis', 'gbk', 'windows-1252'];
+  for(const label of tries){
+    if(!label) continue;
+    try{
+      const dec=new TextDecoder(label,{fatal:true});
+      return dec.decode(b);
+    }catch(_){ /* 이 인코딩으로도 안 되면 다음 후보 */ }
+  }
+  // 마지막 수단 — 손실을 감수하고 UTF-8 (기존 동작과 동일)
+  return new TextDecoder('utf-8').decode(b);
+}
+/* 선두 BOM 문자와 문서에 남은 U+FFFD 개수 확인용 */
+function stripBomChar(s){ return (typeof s==='string') ? s.replace(/^\uFEFF/,'') : s; }
+function countReplacementChars(s){
+  if(typeof s!=='string') return 0;
+  const m=s.match(/\uFFFD/g);
+  return m?m.length:0;
+}
 
 /* ===== EPUB → 편집기 입력 HTML 변환 (epub_to_editor_html.py 포팅) =====
    EPUB(zip) 에서 본문 XHTML 의 <body> 내용을 구조 보존하여 추출하고,
@@ -5619,7 +6140,12 @@ document.getElementById('fileInput').addEventListener('change',async e=>{
 async function epubToHtml(arrayBuffer){
   const zip=await JSZip.loadAsync(arrayBuffer);
   const files=zip.files;
-  const nsStrip=t=>t.includes('}')?t.split('}').pop():t;
+  // {네임스페이스URL}태그 와 접두사(dc:title) 를 모두 벗겨낸다.
+  // 접두사를 안 벗기면 OPF 의 <dc:title>/<dc:language> 를 못 찾아 제목이 항상 '제목 없음' 이 된다.
+  const nsStrip=t=>{
+    let x = t.includes('}') ? t.split('}').pop() : t;
+    return x.includes(':') ? x.split(':').pop() : x;
+  };
   const norm=p=>{ // posix normpath
     const parts=[]; p.split('/').forEach(s=>{ if(s===''||s==='.')return; if(s==='..')parts.pop(); else parts.push(s); });
     return parts.join('/');
@@ -5629,7 +6155,12 @@ async function epubToHtml(arrayBuffer){
   const joinPath=(a,b)=> a? norm(a+'/'+b) : norm(b);
 
   // 1) container.xml 에서 opf 경로
-  async function readText(name){ const ent=zip.file(name); return ent? await ent.async('string') : null; }
+  // 문자열이 아니라 바이트로 읽어 인코딩을 판별한다 (EUC-KR/UTF-16 EPUB 대응)
+  async function readText(name){
+    const ent=zip.file(name);
+    if(!ent) return null;
+    return stripBomChar(decodeBytesSmart(await ent.async('uint8array')));
+  }
   let opfPath=null;
   const container=await readText('META-INF/container.xml');
   if(container){
@@ -5692,7 +6223,11 @@ async function epubToHtml(arrayBuffer){
   let cssParts=[];
   for(const name of Object.keys(files)){
     if(/\.css$/i.test(name)){
-      try{ cssParts.push('/* '+basename(name)+' */\n'+await files[name].async('string')); }catch(_){}
+      try{
+        const cssTxt=stripBomChar(decodeBytesSmart(await files[name].async('uint8array')));
+        // CSS 안에 </style> 가 있으면 주입한 <style> 블록이 조기 종료되어 문서가 깨진다
+        cssParts.push('/* '+basename(name)+' */\n'+cssTxt.replace(/<\/(style)/gi,'<\\/$1'));
+      }catch(_){}
     }
   }
   const epubCss=cssParts.join('\n');
@@ -5717,7 +6252,7 @@ async function epubToHtml(arrayBuffer){
   const chunks=[];
   for(const dp of spinePaths){
     const ent=zip.file(dp); if(!ent) continue;
-    let raw=await ent.async('string');
+    let raw=stripBomChar(decodeBytesSmart(await ent.async('uint8array')));
     chunks.push(inlineImages(bodyInner(raw), dp));
   }
   if(!title) title='제목 없음';
@@ -5740,6 +6275,8 @@ async function epubToHtml(arrayBuffer){
   }
   // 건너뛴 이미지 수를 호출부에 전달 (상태 표시용)
   window.__epubSkippedImages = skippedImages;
+  // 인코딩을 끝내 못 맞춘 글자가 남았는지 알린다 (특수기호 깨짐 조기 발견용)
+  window.__epubBadChars = countReplacementChars(bodyHtml);
   return doc;
 }
 
@@ -6336,11 +6873,9 @@ document.getElementById('clearColorBtn').addEventListener('mousedown',e=>{
 });
 let editOn=true;
 document.body.classList.add('edit-on');
+// 켜고 끄는 일은 setEditorMode 가 도맡는다 — 네 버튼 중 하나만 켜지도록 조정한다
 document.getElementById('toggleEdit').addEventListener('click',function(){
-  editOn=!editOn;
-  document.querySelectorAll('#book [contenteditable]').forEach(el=>el.setAttribute('contenteditable',editOn?'true':'false'));
-  document.body.classList.toggle('edit-on',editOn);
-  this.classList.toggle('active', editOn);   // 색으로 ON/OFF 표현
+  toggleEditorMode('edit');
 });
 
 /* ===== 메시지별 HTML 직접 편집 (우클릭) ===== */
@@ -6351,10 +6886,7 @@ const htmlModal=document.getElementById('htmlModal');
 const htmlEditTa=document.getElementById('htmlEditTa');
 
 document.getElementById('toggleHtmlEdit').addEventListener('click',function(){
-  htmlEditOn=!htmlEditOn;
-  document.body.classList.toggle('htmledit-on',htmlEditOn);
-  this.classList.toggle('active', htmlEditOn);
-  if(!htmlEditOn && typeof removeInsertBar==='function') removeInsertBar();
+  toggleEditorMode('html');
 });
 
 /* 편집 대상 필드/내용 판별 */
@@ -6981,6 +7513,7 @@ function buildDescSiblingPanel(idx){
 
 /* 우클릭: HTML 편집 모드가 켜져 있을 때만 팝업을 연다 */
 document.getElementById('book').addEventListener('contextmenu',e=>{
+  if(typeof tocPickOn!=='undefined' && tocPickOn) return;   // 목차 생성 모드 우선
   if(htmlEditOn){
     const node=e.target.closest('.msg[data-idx], .desc-banner[data-idx], .emote-line[data-idx]');
     if(!node) return;
@@ -7039,14 +7572,12 @@ function handoutTemplate(title, subtitle, body){
 const imgToggleBtn=document.getElementById('toggleImgInsert');
 const handoutToggleBtn=document.getElementById('toggleHandoutInsert');
 function setInsertMode(mode){
-  insertMode = (insertMode===mode) ? null : mode;   // 같은 버튼 다시 누르면 끔
-  document.body.classList.toggle('insert-mode', !!insertMode);
-  imgToggleBtn.classList.toggle('active', insertMode==='image');
-  handoutToggleBtn.classList.toggle('active', insertMode==='handout');
-  if(!insertMode) removeInsertBar();
+  // 실제 토글은 setEditorMode 로 위임 (다른 모드와 상호 배타)
+  if(!mode){ setEditorMode(null); return; }
+  toggleEditorMode(mode);
 }
-imgToggleBtn.addEventListener('click',()=>setInsertMode('image'));
-handoutToggleBtn.addEventListener('click',()=>setInsertMode('handout'));
+imgToggleBtn.addEventListener('click',()=>toggleEditorMode('image'));
+handoutToggleBtn.addEventListener('click',()=>toggleEditorMode('handout'));
 
 /* ===== 커서 우하단을 따라다니는 툴팁(메모) — [data-tip] 요소에 적용 ===== */
 (function initCursorTip(){
@@ -7135,7 +7666,9 @@ bookEl.addEventListener('click',e=>{
     const p=computeInsertPoint(e.clientY);
     insertAfterIdx = p.afterIdx;
     const mode=insertMode;
-    setInsertMode(null);
+    // 삽입 모드는 여기서 끄지 않는다 — 다른 버튼으로 바꾸거나 직접 끄기 전까지 유지해
+    // 연속으로 여러 장을 넣을 수 있게 한다. (삽입 바만 치운다)
+    removeInsertBar();
     if(mode==='image') openImgInsertModal();
     else if(mode==='handout') openHandoutModal();
     return;
@@ -7415,6 +7948,9 @@ async function buildExportedHtmlDoc(){
   live.querySelectorAll('.msg-del,.msg-drag,.insert-bar,.drop-indicator').forEach(el=>el.remove());
   live.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   live.querySelectorAll('.placeholder').forEach(el=>el.remove());
+  // 목차 앵커의 id 는 남기고(문서 내 링크로 쓸 수 있다) 편집기 전용 표식만 지운다
+  live.querySelectorAll('[data-toc]').forEach(el=>el.removeAttribute('data-toc'));
+  live.querySelectorAll('.toc-flash').forEach(el=>el.classList.remove('toc-flash'));
   // Blob URL 이미지를 base64 data URI 로 치환 (독립 HTML 파일에서도 이미지가 보이도록).
   const blobCache=new Map();
   for(const img of [...live.querySelectorAll('img')]){
@@ -7659,6 +8195,18 @@ async function exportEpub(){
   live.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   live.querySelectorAll('.placeholder').forEach(el=>el.remove());
 
+  /* 1-1) 목차 수집 — 본문에 남아 있는 앵커(id="toc-N")를 문서 순서대로 읽는다.
+     제목은 TOC 배열에서 가져오고, 편집기 전용 표식(data-toc)은 여기서 지운다. */
+  const tocTitleByAid=new Map();
+  try{ pruneToc(); TOC.forEach(e=>tocTitleByAid.set(e.aid, e.title)); }catch(_){ }
+  const tocOut=[];
+  live.querySelectorAll('[data-toc]').forEach(el=>{
+    const aid=el.getAttribute('id');
+    if(aid) tocOut.push({ aid, title: (tocTitleByAid.get(aid) || '목차 '+(tocOut.length+1)) });
+    el.removeAttribute('data-toc');
+  });
+  live.querySelectorAll('.toc-flash').forEach(el=>el.classList.remove('toc-flash'));
+
   // 2) 이미지 내장: 본문의 모든 <img> 를 EPUB 내부 파일로 변환하고 src 교체
   st.textContent='이미지 내장 중…';
   // 이미지 압축(축소·재인코딩) 옵션 읽기
@@ -7714,16 +8262,42 @@ async function exportEpub(){
     if(entry){ srcMap.set(src,entry); img.setAttribute('src','images/'+entry.file); embedded++; }
   }
 
-  // 3) XHTML 직렬화
+  /* 3) XHTML 직렬화 — 목차 지점마다 파일을 나눈다.
+     리더마다 목차를 읽는 방식이 다르다. nav.xhtml / toc.ncx 를 읽는 리더도 있지만,
+     스파인(본문 파일 목록) 자체를 목차로 삼는 리더도 흔하다(웹 기반 리더가 특히 그렇다).
+     본문을 한 파일에 몰아넣으면 후자에서는 항목이 하나뿐인 목차가 나온다.
+     그래서 목차 앵커를 경계로 본문을 잘라 chapter1..N.xhtml 로 내보내고,
+     각 파일의 <title> 에 목차 이름을 넣는다 — 두 방식 모두에서 같은 목차가 보인다. */
   const ser=new XMLSerializer();
-  let bodyXhtml='';
-  Array.from(live.childNodes).forEach(n=>{
-    if(n.nodeType===1) bodyXhtml+=ser.serializeToString(n)+'\n';
-    else if(n.nodeType===3) bodyXhtml+=esc(n.textContent);
-  });
-  // 파싱 단계에서 이미 걸렀지만, 이후 직접 편집·붙여넣기로 다시 들어올 수 있으므로
-  // EPUB 에 넣기 직전에 한 번 더 XML 금지 문자를 제거한다 (엄격한 리더 대응).
-  bodyXhtml = stripXmlInvalid(bodyXhtml);
+  const serializeNodes=nodes=>{
+    let out='';
+    nodes.forEach(n=>{
+      if(n.nodeType===1) out+=ser.serializeToString(n)+'\n';
+      else if(n.nodeType===3) out+=esc(n.textContent);
+    });
+    // 파싱 단계에서 이미 걸렀지만, 이후 직접 편집·붙여넣기로 다시 들어올 수 있으므로
+    // EPUB 에 넣기 직전에 한 번 더 XML 금지 문자를 제거한다 (엄격한 리더 대응).
+    return stripXmlInvalid(out);
+  };
+  const segments=[];   // [{name, nodes}]
+  {
+    const kids=Array.from(live.childNodes);
+    let cur={ name:title, nodes:[] };
+    kids.forEach(n=>{
+      const aid = (n.nodeType===1 && n.id && tocTitleByAid.has(n.id)) ? n.id : null;
+      if(aid){
+        // 첫 목차 앞에 아무 내용도 없으면 빈 도입부를 만들지 않는다
+        if(cur.nodes.length || segments.length) segments.push(cur);
+        cur={ name: tocTitleByAid.get(aid) || title, nodes:[] };
+      }
+      cur.nodes.push(n);
+    });
+    segments.push(cur);
+  }
+  const chapterFiles = segments.map((seg,i)=>({
+    file:'chapter'+(i+1)+'.xhtml', id:'ch'+(i+1),
+    name: seg.name || title, xhtml: serializeNodes(seg.nodes)
+  }));
 
   const pageCss=buildPageCss(true);  // EPUB 전용 폭·여백 적용
   const uuid='urn:uuid:'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2));
@@ -7814,19 +8388,48 @@ async function exportEpub(){
     oebps.file('cover.xhtml',coverPage);
   }
 
-  oebps.file('chapter1.xhtml',
+  const bookCls = live.classList.contains('no-avatar') ? ' class="no-avatar"' : '';
+  chapterFiles.forEach(ch=>{
+    oebps.file(ch.file,
 '<?xml version="1.0" encoding="utf-8"?>\n'+
 '<!DOCTYPE html>\n'+
 '<html xmlns="http://www.w3.org/1999/xhtml" lang="ko" xml:lang="ko">\n'+
-'<head><meta charset="utf-8"/><title>'+esc(title)+'</title>\n'+
+'<head><meta charset="utf-8"/><title>'+esc(ch.name)+'</title>\n'+
 '<link rel="stylesheet" type="text/css" href="style.css"/></head>\n'+
-'<body><div id="book"'+(live.classList.contains('no-avatar')?' class="no-avatar"':'')+'>\n'+bodyXhtml+'\n</div></body></html>');
+'<body><div id="book"'+bookCls+'>\n'+ch.xhtml+'\n</div></body></html>');
+  });
+  /* 목차 항목 → 그 항목이 시작하는 파일. 앵커도 함께 남겨 파일 안쪽으로도 정확히 뛴다. */
+  const hrefByAid=new Map();
+  segments.forEach((seg,i)=>{
+    const first=seg.nodes.find(n=>n.nodeType===1 && n.id && tocTitleByAid.has(n.id));
+    if(first) hrefByAid.set(first.id, chapterFiles[i].file+'#'+first.id);
+  });
+  /* 목차 — 사용자가 지정한 항목이 있으면 그대로, 없으면 책 제목 하나만 넣는다.
+     EPUB3 리더는 nav.xhtml 을, 구형(EPUB2) 리더는 toc.ncx 를 읽으므로 둘 다 만든다. */
+  const navItems = tocOut.length
+    ? tocOut.map(t=>'<li><a href="'+esc(hrefByAid.get(t.aid)||chapterFiles[0].file)+'">'+esc(t.title)+'</a></li>').join('\n')
+    : '<li><a href="'+chapterFiles[0].file+'">'+esc(title)+'</a></li>';
   oebps.file('nav.xhtml',
 '<?xml version="1.0" encoding="utf-8"?>\n'+
 '<!DOCTYPE html>\n'+
 '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ko" xml:lang="ko">\n'+
 '<head><meta charset="utf-8"/><title>목차</title></head>\n'+
-'<body><nav epub:type="toc"><h1>목차</h1><ol><li><a href="chapter1.xhtml">'+esc(title)+'</a></li></ol></nav></body></html>');
+'<body><nav epub:type="toc" id="toc"><h1>목차</h1><ol>\n'+navItems+'\n</ol></nav></body></html>');
+
+  const ncxPoints = (tocOut.length
+    ? tocOut.map(t=>({href:(hrefByAid.get(t.aid)||chapterFiles[0].file), label:t.title}))
+    : [{href:chapterFiles[0].file, label:title}]
+  ).map((t,i)=>
+'<navPoint id="np'+(i+1)+'" playOrder="'+(i+1)+'">'+
+'<navLabel><text>'+esc(t.label)+'</text></navLabel>'+
+'<content src="'+esc(t.href)+'"/></navPoint>').join('\n');
+  oebps.file('toc.ncx',
+'<?xml version="1.0" encoding="utf-8"?>\n'+
+'<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="ko">\n'+
+'<head><meta name="dtb:uid" content="'+uuid+'"/><meta name="dtb:depth" content="1"/>'+
+'<meta name="dtb:totalPageCount" content="0"/><meta name="dtb:maxPageNumber" content="0"/></head>\n'+
+'<docTitle><text>'+esc(title)+'</text></docTitle>\n'+
+'<navMap>\n'+ncxPoints+'\n</navMap>\n</ncx>');
   oebps.file('content.opf',
 '<?xml version="1.0" encoding="utf-8"?>\n'+
 '<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="bookid">\n'+
@@ -7841,11 +8444,12 @@ coverMeta+
 '<manifest>\n'+
 '<item id="css" href="style.css" media-type="text/css"/>\n'+
 '<item id="nav" href="nav.xhtml" properties="nav" media-type="application/xhtml+xml"/>\n'+
-'<item id="ch1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>\n'+
+'<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>\n'+
+chapterFiles.map(c=>'<item id="'+c.id+'" href="'+c.file+'" media-type="application/xhtml+xml"/>').join('\n')+'\n'+
 coverManifest+
 imgItems.join('\n')+(imgItems.length?'\n':'')+
 '</manifest>\n'+
-'<spine>'+coverSpine+'<itemref idref="ch1"/></spine>\n'+
+'<spine toc="ncx">'+coverSpine+chapterFiles.map(c=>'<itemref idref="'+c.id+'"/>').join('')+'</spine>\n'+
 '</package>');
 
   const blob=await zip.generateAsync({type:'blob',mimeType:'application/epub+zip'});
@@ -7853,7 +8457,7 @@ imgItems.join('\n')+(imgItems.length?'\n':'')+
   a.href=URL.createObjectURL(blob);
   a.download=(title.replace(/[\\/:*?"<>|]+/g,'_')||'book')+'.epub';
   a.click();
-  st.textContent='발행 완료 — 이미지 '+embedded+'개 내장'+(compressed?(' (그중 '+compressed+'개 축소·압축)'):'')+(cssEmbedded?(', CSS 배경이미지 '+cssEmbedded+'개 내장'):'')+((failed||cssFailed)?(', '+(failed+cssFailed)+'개는 서버 차단(CORS)으로 원본 URL 유지'):'')+(COVER?', 표지 포함':'')+(droppedRefs.length?(' · 웹폰트 참조 '+droppedRefs.length+'개 제거(애플 Books 호환 — 대체 글꼴로 표시됩니다)'):'');
+  st.textContent='발행 완료 — '+(tocOut.length?('목차 '+tocOut.length+'개(본문 '+chapterFiles.length+'개 파일로 분할), '):'')+'이미지 '+embedded+'개 내장'+(compressed?(' (그중 '+compressed+'개 축소·압축)'):'')+(cssEmbedded?(', CSS 배경이미지 '+cssEmbedded+'개 내장'):'')+((failed||cssFailed)?(', '+(failed+cssFailed)+'개는 서버 차단(CORS)으로 원본 URL 유지'):'')+(COVER?', 표지 포함':'')+(droppedRefs.length?(' · 웹폰트 참조 '+droppedRefs.length+'개 제거(애플 Books 호환 — 대체 글꼴로 표시됩니다)'):'');
 }
 document.getElementById('exportEpubBtn').addEventListener('click',exportEpub);
 </script>
