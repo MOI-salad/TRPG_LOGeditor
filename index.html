@@ -106,7 +106,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     background-repeat:no-repeat;background-position:right 11px center;padding-right:30px}
   select:hover{border-color:var(--accent)}
   select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(122,91,58,.12)}
-  .stage{overflow:auto;max-height:calc(100vh - 84px);scrollbar-gutter:stable}
+  .stage{overflow:auto;max-height:calc(100vh - 84px)}
   .toolbar{position:sticky;top:0;z-index:20;display:flex;gap:6px;align-items:center;flex-wrap:wrap;
     padding:9px 14px;background:#131313;backdrop-filter:blur(4px)}
   .toolbar button{background:#2e2924;color:var(--paper);border:1px solid #4a4035;border-radius:4px;
@@ -189,8 +189,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   /* 아바타를 채팅과 함께 표시 옵션을 껐을 때: 이름은 12px, 본문은 24px 들여쓰기 */
   #book.no-avatar{--indent:24px}
   #book.no-avatar .msg .msg-head{padding-left:12px}
-  /* 귓속말: 화자명·본문 회색 처리 */
-  .msg.msg-whisper .speaker, .msg.msg-whisper .msg-body{color:#616161}
+  /* 귓속말: 본문색 유지 + 옅은 바탕 */
+  .msg.msg-whisper{background:#FBFDDE}
   /* 우클릭 삽입물(이미지/핸드아웃): 들여쓰기·나레이션 폰트 제거하고 전체폭 사용 */
   .msg.msg-insert .msg-body{padding-left:0;font-family:inherit}
   /* 롤 메시지: 테이블 본문은 들여쓰기 없이 전체 폭 */
@@ -402,15 +402,23 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   /* ── 헤더 ───────────────────────────────────────────────── */
   header.app-head{
     flex:none;display:flex;align-items:center;gap:var(--s4);
-    padding:var(--s5) var(--s6) var(--s4);background:transparent;border-bottom:none;
+    padding:18px var(--s6) 14px;
+    background:var(--surface);border-bottom:1px solid var(--line);
   }
+  .app-head-text{
+    min-width:0;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  /* 제목 옆 메타 — 파일명 · 세션 횟수 · 플레이 시간 */
+  .app-head-meta{
+    min-width:0;display:flex;align-items:baseline;gap:6px;
+    padding-left:12px;border-left:1px solid var(--line);
+    font-family:var(--kr);font-size:12px;line-height:1.5;color:var(--muted)}
+  .app-head-meta[hidden]{display:none}
+  .app-head-meta .am-file{
+    max-width:32ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)}
+  .app-head-meta .am-sep{color:var(--line-strong)}
   header.app-head h1{
-    margin:0;font-family:var(--ui);font-size:30px;font-weight:600;
+    margin:0;font-family:var(--ui);font-size:24px;font-weight:600;
     letter-spacing:-.022em;line-height:1.15;color:var(--ink);
-  }
-  header.app-head p{
-    margin:var(--s2) 0 0;font-family:var(--kr);font-size:12px;font-weight:400;
-    line-height:1.5;color:var(--sub);
   }
   .help-btn{
     margin-left:auto;flex:none;width:38px;height:38px;border-radius:50%;
@@ -422,12 +430,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   /* ── 2열 레이아웃 ───────────────────────────────────────── */
   .wrap{
     flex:1;min-height:0;display:grid;grid-template-columns:360px minmax(0,1fr);
-    gap:var(--s5);padding:0 var(--s6) var(--s5);
+    gap:var(--s5);padding:12px var(--s6) var(--s5);
   }
   .panel{
     border-right:none;background:transparent;padding:0 var(--s1) var(--s2) 0;
     overflow:auto;max-height:none;height:100%;
-    display:flex;flex-direction:column;gap:32px;
+    display:flex;flex-direction:column;gap:var(--s2);
   }
   .panel::-webkit-scrollbar,.stage::-webkit-scrollbar{width:16px}
   .panel::-webkit-scrollbar-thumb,.stage::-webkit-scrollbar-thumb{
@@ -591,13 +599,56 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .av-item .av-name{font-family:var(--kr);font-size:12px;color:var(--ink)}
   .av-item .av-url{font-size:12px;color:var(--gray);font-family:var(--kr)}
   .av-item.changed{border-color:var(--point);background:var(--tint)}
-  .av-item.narr{border-color:var(--point);background:var(--tint)}
-  .av-narr-btn{border:1px solid var(--line-field);border-radius:var(--r-chip);font-family:var(--kr);
+  /* 나레이션 지정은 '버튼만' 보랏빛으로 — 카드 면·테두리는 그대로 둔다 */
+  .av-item.narr{border-color:var(--line);background:var(--surface)}
+  /* 모아보기(이 화자만 보기)로 선택된 카드만 옅은 보라 면 + 보라 테두리 */
+  .av-item.spk-only,html[data-theme="dark"] .av-item.spk-only{
+    border-color:var(--point);background:var(--tint)}
+  .av-narr-btn{align-self:flex-start;flex:none;width:72px;
+    display:inline-flex;align-items:center;justify-content:center;text-align:center;
+    border:1px solid var(--line-field);border-radius:var(--r-chip);font-family:var(--kr);
     font-size:12px;color:var(--ink);background:var(--surface);background-clip:padding-box}
   .av-narr-btn:hover{border-color:var(--hover-text);color:var(--hover-text)}
   .av-narr-btn.on{background-color:var(--point);border-color:var(--point);color:var(--black)}
   .av-list > div:not(.av-item){
     font-family:var(--kr) !important;font-size:12px !important;color:var(--gray) !important;padding:var(--s2) 0}
+
+  /* ── 화자 카드 인터랙션 (링크 인라인 편집 / 숨기기 / 모아보기) ── */
+  /* 링크 인라인 편집 — .av-url 자리에서 바로 편집. 카드 높이·글자 크기 유지, 포커스 링 없음 */
+  .av-item .av-meta .av-url-input{
+    display:block;box-sizing:border-box;width:100%;height:auto;min-height:0;
+    margin:0;padding:0;border:0;border-radius:0;
+    background:transparent;color:var(--ink);
+    font:inherit;font-size:inherit;line-height:inherit;letter-spacing:inherit}
+  .av-item .av-meta .av-url-input:focus{outline:none;box-shadow:none;border:0;background:transparent}
+  .av-item .av-meta .av-url-input::placeholder{color:var(--gray)}
+  /* 아바타 아이콘 = 숨기기 토글 */
+  .av-thumb-wrap{position:relative;flex:none;width:40px;height:40px;line-height:0;cursor:pointer}
+  .av-thumb-wrap .av-thumb{display:block;transition:filter var(--t-fast)}
+  .av-thumb-wrap .av-eye{
+    position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;
+    opacity:0;pointer-events:none;transition:opacity var(--t-fast)}
+  .av-thumb-wrap:hover .av-thumb{filter:brightness(.6)}
+  .av-thumb-wrap:hover .av-eye{opacity:.4}
+  .av-item.spk-hidden{opacity:.55}
+  .av-item.spk-hidden .av-thumb{filter:brightness(.6)}
+  .av-item.spk-hidden .av-eye{opacity:.4}
+  /* 미리보기 본문 — 숨김 대상 블록 */
+  #book > .spk-hide{display:none !important}
+  /* 목차 레일 — 필터 상태 안내 카드 */
+  .toc-filter-card{
+    display:flex;flex-direction:column;gap:var(--s2);
+    margin:0;padding:var(--s4);
+    border:1px solid var(--line);border-radius:var(--r-face);
+    background:var(--surface);font-family:var(--kr)}
+  .toc-filter-msg{font-size:var(--t-caption);line-height:1.6;color:var(--sub);word-break:break-all}
+  .toc-filter-msg b{font-weight:700;color:var(--ink)}
+  .toc-filter-btn{
+    padding:0 var(--s2);min-height:26px;
+    border:1px solid var(--line-field);border-radius:var(--r-chip);
+    background:var(--surface);background-clip:padding-box;
+    font-family:var(--kr);font-size:var(--t-caption);color:var(--ink);cursor:pointer}
+  .toc-filter-btn:hover{border-color:var(--hover-text);color:var(--hover-text)}
 
   /* ── 고급 설정(details) ─────────────────────────────────── */
   .adv{margin-top:var(--s3);border:1px solid var(--line);border-radius:var(--r-ctl);
@@ -617,10 +668,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .adv-body .btn{width:100%;margin:var(--s3) 0 0}
   .adv-body .btn-row{margin-top:var(--s3)}
   .adv-body .btn-row .btn{width:auto;margin:0}
+  /* 한 줄에 1열(꽉 차게) / 한 줄에 2열 — 좁은 화면에서도 열 수를 유지한다 */
+  .btn-row.btn-row-full .btn{flex:1 1 100%;width:100%}
+  .btn-row.btn-row-2{margin-top:var(--s2)}
+  .btn-row.btn-row-2 .btn{flex:1 1 0;width:auto;min-width:0}
   .adv-body{border-top:1px solid var(--line)}
 
   /* ── 스테이지 · 상단 바 ─────────────────────────────────── */
-  .stage{overflow:auto;max-height:none;height:100%;padding:0 0 var(--s6);scrollbar-gutter:stable}
+  .stage{overflow:auto;max-height:none;height:100%;padding:0 0 var(--s6)}
   .toolbar-dock{position:sticky;top:0;z-index:20;background:var(--page);padding:0 0 var(--s4)}
   .toolbar{
     position:static;top:auto;z-index:auto;min-height:60px;
@@ -801,15 +856,20 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   /* 목차 레일과 미리보기는 같은 y 에서 시작한다.
      레일의 왼쪽 시작점은 상단 바(.toolbar) 시작점에서 4px 안쪽. */
   .stage-row{
-    display:flex;align-items:flex-start;gap:12px;
+    display:flex;align-items:flex-start;gap:var(--s4);
     padding:0 var(--s4) 0 4px}
   .stage-row > #book{flex:1 1 auto;min-width:0;margin-top:0}
 
-  .toc-rail{
+  /* 목차 레일 + 부가 카드가 함께 흐르는 세로 열 (카드끼리는 서로 독립) */
+  .rail-col{
     flex:none;width:184px;align-self:flex-start;margin-top:0;
-    position:sticky;top:calc(var(--dock-h,84px));
+    position:sticky;top:calc(var(--dock-h,64px));
+    display:flex;flex-direction:column;gap:var(--s2)}
+  .toc-rail{
+    flex:none;width:100%;align-self:stretch;margin-top:0;
+    position:static;
     display:flex;flex-direction:column;gap:var(--s2);
-    padding:16px;border:1px solid var(--line);border-radius:var(--r-face);
+    padding:var(--s4);border:1px solid var(--line);border-radius:var(--r-face);
     background:var(--surface);font-family:var(--kr)}
   .toc-rail-title{
     font-size:var(--t-label);font-weight:700;color:var(--ink);letter-spacing:-.01em}
@@ -893,6 +953,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   @media (max-width:1180px){
     .stage-row{flex-direction:column;gap:var(--s3)}
+    .rail-col{width:100%;position:static;flex-direction:column}
     .toc-rail{width:100%;position:static;flex-direction:row;flex-wrap:wrap;align-items:center}
     .toc-rail-list{flex:1 1 100%;max-height:180px}
     .toc-make-btn{width:auto;padding:0 var(--s4)}
@@ -1070,7 +1131,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .modal-search .find-status{color:var(--muted) !important}
   /* tint 면 위에서는 --muted 가 4.3:1 로 떨어진다 → 상태 항목의 읽는 글자는 --sub.
      (면을 올렸으면 그 위의 글자도 함께 올린다 — 위 !important 와 같은 강도로 좁혀 덮는다) */
-  .av-item.changed .av-url,.av-item.narr .av-url,
+  .av-item.changed .av-url,.av-item.narr .av-url,.av-item.spk-only .av-url,
   .ds-item.cur .ds-idx,.fontpick-opt.sel span,
   #speakerPopover .sp-item.sp-cur .sp-name{color:var(--sub) !important}
   header.app-head p{color:var(--muted)}
@@ -1226,7 +1287,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
      ========================================================================== */
   /* 탭 제목 14px · 카드 간격 24px · 접힌 카드 상하 여백 16px */
   .sect-title{font-size:14px}
-  .panel{gap:var(--s5)}
+  .panel{gap:var(--s2)}
   .sect{padding:var(--s5) 0}
   .sect.collapsed{padding:var(--s16) 0}
 
@@ -1260,8 +1321,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   /* 2) 삽입 버튼 가로 200px */
   #imgInsertApply,#handoutApply,#htmlInsertApply{width:200px;min-width:200px}
 
-  /* 3) 탭 카드 간격 16px */
-  .panel{gap:var(--s16)}
+  /* 3) 탭 카드 간격 8px */
+  .panel{gap:var(--s2)}
 
   /* 4) 물음표 — #658DFF 고정, 호버해도 변하지 않음 */
   .help-btn,.help-btn:hover,.help-btn:active,.help-btn:focus{
@@ -1307,9 +1368,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .fontpick-opt.sel,.fontpick-opt.sel:hover{background:var(--tint);color:var(--point)}
   .fontpick-opt .fp-check{color:var(--point)}
 
-  /* 3) 헤더 아래 여백 36px · 물음표 12px 아래로 */
-  header.app-head{padding:var(--s5) var(--s6) 36px}
-  .help-btn{position:relative;top:12px}
+  /* 3) 헤더 위 12px · 아래 36px · 우측 아이콘은 제목과 같은 축 */
+  header.app-head{padding:18px var(--s6) 14px}
+  .help-btn{position:static;top:auto}
 
   /* 4) 미리보기 본문 글자색 — 내보내는 CSS(body{color:#000000}) 와 같은 값 */
   #book{color:#000000}
@@ -1354,12 +1415,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   html{color-scheme:light}
   :root{
     /* 면 */
-    --page:#faf8f5; --surface:#ffffff; --subtle:#f0ede7; --bar:#22231f;
+    --page:#F8F8F8; --surface:#ffffff; --subtle:#f0ede7; --bar:#22231f;
     /* 글자 */
     --ink:#22231f; --black:#22231f; --sub:#5f6158; --muted:#6f7068; --gray:#767770;
-    --on-bar:#e6e4dd; --on-bar-dim:#a2a299; --on-fill:#ffffff;
+    --on-bar:#e6e4dd; --on-bar-dim:#ABABAA; --on-fill:#ffffff;
     /* 선 */
-    --line:#e3e0d9; --line-strong:#cdc9c0; --line-field:#cdc9c0; --line-modal:#cdc9c0;
+    --line:#DADADA; --line-strong:#E7E7E5; --line-field:#C9C9C7; --line-modal:#E7E7E5;
     --track:#e0ded6;
     /* 포인트 3단 — 100 면 · 400 활성 · 600 글자·테두리·포커스 */
     --accent-100:#eaedfb; --accent-400:#4f63cf; --accent-600:#3f57c9;
@@ -1397,14 +1458,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .btn,.btn.alt{background-color:var(--surface);color:var(--ink);border-color:var(--line-strong);border-width:1px}
   .btn:hover,.btn.alt:hover{background-color:var(--surface);color:var(--hover-text);border-color:var(--hover-text)}
   .link-btn{color:var(--sub)}
-  input[type=file]::file-selector-button{background:var(--subtle);color:var(--ink)}
+  input[type=file]::file-selector-button{background:#EFEFEF;color:var(--ink)}
   input[type=file]::file-selector-button:hover{background:var(--line);color:var(--ink)}
+  /* 파일 선택 버튼은 라이트 기준 밝은 면(#EFEFEF)이라 다크에서 글자(--ink)까지 밝아져
+     흰 면 위 흰 글자가 된다 → 다크에서만 면을 어둡게 덮는다 (라이트는 원래 값 유지) */
+  html[data-theme="dark"] input[type=file]::file-selector-button{
+    background:var(--subtle);color:var(--ink)}
+  html[data-theme="dark"] input[type=file]::file-selector-button:hover{
+    background:var(--line-strong);color:var(--ink)}
   .seg{background:var(--surface);border-color:var(--line)}
   .seg button{color:var(--sub)}
   .seg button:hover{background-color:var(--subtle);color:var(--ink)}
   .seg button.on,.seg button.on:hover{background-color:var(--subtle);color:var(--ink)}
 
   /* ── 상단 바 — 올리브 면을 없애고 고스트 + 활성만 포인트 ── */
+  /* 앱바는 라이트에서 흰 면(--surface, 시안 A) · 다크에서만 셸보다 어두운 면(시안 B) */
+  html[data-theme="dark"] header.app-head{background:var(--bar);border-bottom-color:var(--line)}
   .toolbar{background:var(--bar);border:1px solid var(--line)}
   .toolbar button,.modal-search .btn{
     background-color:transparent;border-color:transparent;color:var(--on-bar)}
@@ -1495,7 +1564,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   /* ── 다크: 그림자를 면 밝기 + 1px 선으로 치환 ── */
   html[data-theme="dark"] .card,html[data-theme="dark"] .adv,
-  html[data-theme="dark"] .av-item:not(.changed):not(.narr),html[data-theme="dark"] .cover-stage,
+  html[data-theme="dark"] .av-item:not(.changed):not(.narr):not(.spk-only),html[data-theme="dark"] .cover-stage,
   html[data-theme="dark"] .ds-item:not(.cur){background:var(--surface);border-color:var(--line)}
   html[data-theme="dark"] input[type=text],html[data-theme="dark"] input[type=number],
   html[data-theme="dark"] textarea,html[data-theme="dark"] select,
@@ -1567,8 +1636,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     background:var(--surface);color:var(--ink);
     border:1px solid var(--line);box-shadow:none}
   html[data-theme="dark"] #book .divider{border-top-color:var(--line-strong)}
-  html[data-theme="dark"] #book .msg.msg-whisper .speaker,
-  html[data-theme="dark"] #book .msg.msg-whisper .msg-body{color:var(--muted)}
+  html[data-theme="dark"] #book .msg.msg-whisper{background:rgba(251,253,222,.3)}
   html[data-theme="dark"] #book .msg .msg-avatar{border-color:var(--line-strong)}
   /* 롤 · 주사위 결과 — 내장 주사위 CSS 와 붙여넣은 룰 CSS 는 '흰 종이' 기준으로
      쓰여 있어(예: .formula{color:#000}) 어두운 지면에서 사라진다.
@@ -1589,7 +1657,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   /* ── 테마 토글 ── */
   .theme-btn{
-    flex:none;position:relative;top:12px;width:var(--h-md);height:var(--h-md);
+    flex:none;position:static;width:var(--h-md);height:var(--h-md);
     border:none;border-radius:50%;background:none;color:var(--sub);cursor:pointer;padding:0;
     display:flex;align-items:center;justify-content:center;transition:var(--t-fast)}
   .theme-btn:hover{color:var(--ink);background:none}
@@ -1667,7 +1735,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     --t-title:32px; --t-section:19px; --t-body:15px; --t-label:13px; --t-caption:12px;
   }
 
-  header.app-head h1{font-size:var(--t-title);font-weight:700;letter-spacing:-.03em}
+  header.app-head h1{font-size:24px;font-weight:700;letter-spacing:-.03em}
 
   .sect-title,.sheet-title,.modal-head .mtitle,.sheet-body.help h3,.placeholder b{
     font-size:var(--t-section);font-weight:700;letter-spacing:-.02em}
@@ -1754,7 +1822,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     --s32:32px;   /* 예외: 셀렉트 캐럿 자리 */
   }
   /* 헤더 — 타이틀·설명어·섹션 사이 거리를 두 배로 (하단 36px) */
-  header.app-head{padding:var(--s5) var(--s6) 36px}
+  header.app-head{padding:18px var(--s6) 14px}
   header.app-head p{margin-top:var(--s4)}
   /* 창 상단바 — 위:아래 = 6:5 (12:10). 비율 요구가 있어 척도 밖 10 을 허용한다. */
   .modal-search{padding:12px var(--s4) 10px}
@@ -1846,11 +1914,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   @media (max-width:1000px){
     html,body{height:auto}
     body{display:block;overflow:auto}
-    header.app-head{padding:var(--s4) var(--s4) 36px}
+    header.app-head{padding:18px var(--s4) 14px}
     header.app-head h1{font-size:26px}
-    .wrap{display:block;padding:0 var(--s4) 96px}
+    .wrap{display:block;padding:12px var(--s4) 96px}
     .panel{height:auto;max-height:none;overflow:visible;display:block;padding:0}
-    .card{margin-bottom:var(--s3)}
+    .card{margin-bottom:var(--s2)}   /* 1열 구간에서도 카드 간격 8px 고정 */
     .stage{height:auto;max-height:none;overflow:visible}
     .toolbar-dock{position:sticky;top:0;padding:var(--s1) 0 var(--s3)}
     #book{padding:22px 16px 60px}
@@ -1866,9 +1934,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     .toast{right:var(--s3);bottom:88px}
   }
   @media (max-width:560px){
-    header.app-head{padding:var(--s3) var(--s3) 36px}
+    header.app-head{padding:18px var(--s3) 14px}
     header.app-head h1{font-size:22px}
-    .wrap{padding:0 var(--s3) 96px}
+    .wrap{padding:12px var(--s3) 96px}
     /* 상단 바 — 스페이서를 접고 토글을 2열로 고르게 (들쭉날쭉한 줄 방지) */
     /* 상단 바 — 2열 그리드로 고정 (자유 wrap 은 줄마다 폭이 들쭉날쭉해진다) */
     .stage .toolbar{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s1);
@@ -1887,6 +1955,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     /* 실행 버튼은 한 줄에 하나 */
     .btn-row{flex-wrap:wrap}
     .btn-row .btn{flex:1 1 100%}
+    .btn-row.btn-row-2 .btn{flex:1 1 0;min-width:0}
     /* 창은 화면을 거의 다 쓰게 */
     .sheet,.modal-win,.html-modal-win,
     #imgInsertModal .modal-win,#handoutModal .modal-win,
@@ -1897,13 +1966,70 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     .sheet-body{padding:0 var(--s4) var(--s4)}
     .modal-foot{padding:var(--s3) var(--s4) var(--s4)}
   }
+
+  /* ==========================================================================
+     좁은 화면 마무리 — 도구줄 · 목차 카드
+     고정 도구줄이 세로로 3줄까지 늘어나 본문을 밀어내던 문제와, 목차 카드가
+     제목 / 개수 / 목록 / 버튼으로 네 줄을 차지하던 문제를 함께 정리한다.
+     반드시 앞선 반응형 문단들보다 뒤에 둔다.
+     ========================================================================== */
+  @media (max-width:1180px){
+    /* 목차 카드 — 제목·개수는 한 줄에, 생성 버튼은 그 줄 오른쪽 끝, 목록은 아래 */
+    .toc-rail{
+      display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+      gap:var(--s2) var(--s3);padding:var(--s3) var(--s4)}
+    .toc-rail-title{grid-column:1}
+    .toc-rail-count{grid-column:2;min-width:0}
+    .toc-make-btn{grid-column:3;width:auto;justify-self:end;padding:0 var(--s3)}
+    .toc-rail-list{grid-column:1 / -1;margin:0;max-height:150px}
+    .toc-rail-empty{padding:0 2px}
+    /* 필터 안내 카드 — 문구 왼쪽, 전체 보기 버튼 오른쪽 끝 */
+    .toc-filter-card{
+      display:grid;grid-template-columns:1fr auto;align-items:center;
+      gap:var(--s3);padding:var(--s3) var(--s4)}
+    .toc-filter-btn{justify-self:end;white-space:nowrap}
+  }
+  @media (max-width:700px){
+    /* 도구줄 — 되돌리기·재실행은 왼쪽 한 줄, 토글은 그 아래 오른쪽 정렬.
+         ↶ ↷            본문 편집 | HTML 편집
+                       이미지 삽입 | 핸드아웃 삽입
+       되돌리기·재실행은 첫 줄 왼쪽에 함께 올려 바 높이를 한 줄 줄인다.
+       버튼 폭은 글자만큼만 쓰고, 삽입 도구 앞의 줄바꿈만 고정한다
+       (.sep 을 폭 100% 짜리 줄바꿈 자리로 쓴다).
+       가로 스크롤이 없으므로 모든 버튼이 항상 보인다. */
+    .stage .toolbar{
+      display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;
+      column-gap:var(--s2);row-gap:0;padding:var(--s2) var(--s3);
+      min-height:0;overflow:visible}
+    .stage .toolbar button.tb-icon{
+      order:-2;flex:0 0 36px;width:36px;min-width:36px;padding:0;margin-right:0}
+    /* 되돌리기·재실행만 왼쪽 — 남는 공간을 재실행의 오른쪽 여백이 흡수한다 */
+    .stage .toolbar #btnRedo{margin-right:auto}
+    /* 아이콘과 토글을 같은 줄에 두므로 줄바꿈 자리는 쓰지 않는다 */
+    .stage .toolbar .tb-spacer{display:none}
+    /* 세로 구분선은 그 자리에서 '줄바꿈'으로 역할을 바꾼다 —
+       덕분에 토글이 정확히 2개씩(본문·HTML / 이미지·핸드아웃) 나뉜다 */
+    .stage .toolbar .sep{
+      display:block;flex:1 1 100%;width:auto;height:var(--s2);margin:0;background:none}
+    /* 손가락으로 누르는 최소 크기 36 · 폭은 글자에 맞춰 컴팩트하게 */
+    .stage .toolbar button{
+      height:36px;min-height:36px;padding:0 var(--s3);white-space:nowrap}
+    .stage .toolbar .tb-toggle{
+      flex:0 0 auto;width:auto;min-width:0;max-width:calc(50% - var(--s2));
+      justify-content:center;margin-top:0}
+    .toolbar-dock{padding:var(--s1) 0 var(--s2)}
+  }
 </style>
 </head>
 <body>
 <header class="app-head">
   <div class="app-head-text">
     <h1>TRPG log editor</h1>
-    <p>Roll20 채팅 HTML 로그를 불러와 정리하고, 직접 편집한 뒤 EPUB으로 저장합니다.</p>
+    <div class="app-head-meta" id="appMeta" hidden>
+      <span class="am-file" id="amFile"></span>
+      <span class="am-sep" aria-hidden="true">·</span><span id="amSessions"></span>
+      <span class="am-sep" aria-hidden="true">·</span><span id="amPlay"></span>
+    </div>
   </div>
   <div class="app-head-actions">
     <button class="theme-btn" id="themeBtn" type="button" title="밝은 모드 / 어두운 모드" aria-label="테마 전환">
@@ -2341,13 +2467,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <svg class="sect-caret" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.52" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg>
         </button></h2>
         <div class="sect-body">
-          <ol class="steps">
-            <li>Roll20 Chat Archive에서 이 게임의 모든 채팅 보기를 설정합니다.</li>
-            <li>F12 혹은 Ctrl+Shift+I 로 관리자 모드를 엽니다.</li>
-            <li><code>div class="textchatcontainer" id="textchat"</code>를 찾아 우클릭 후 Edit as HTML (HTML로 편집)</li>
-            <li>전체 내용을 복사 후 붙여넣습니다.</li>
-          </ol>
-
           <div class="field-head">
             <span class="field-label">HTML · EPUB 붙여넣기</span>
             <button type="button" class="link-btn" id="expandBtn" title="별도 편집 창에서 열기">큰 창 열기
@@ -2361,7 +2480,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
           <div class="btn-row">
             <button class="btn alt" id="refreshBtn" type="button" title="원본에서 다시 변환합니다">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.52" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.6"/><path d="M20 4.5V11h-6.2"/></svg>
               새로 고침
             </button>
             <button class="btn alt" id="parseBtn" type="button">변환하기</button>
@@ -2392,10 +2510,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             <summary>시트 소스 직접 편집</summary>
             <div class="adv-body">
               <textarea id="rollCss" rows="7" aria-label="롤 테이블 CSS" placeholder="롤 테이블 CSS를 붙여넣거나, 위에서 룰을 선택하세요."></textarea>
-              <div class="btn-row">
+              <div class="btn-row btn-row-full">
+                <button class="btn" id="cssCheckBtn" type="button">EPUB 호환 검사</button>
+              </div>
+              <div class="btn-row btn-row-2">
                 <button class="btn" id="exportCssBtn" type="button">CSS 저장</button>
                 <button class="btn" id="applyCss" type="button">CSS 적용</button>
-                <button class="btn" id="cssCheckBtn" type="button">EPUB 호환 검사</button>
               </div>
             </div>
           </details>
@@ -2411,7 +2531,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <svg class="sect-caret" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.52" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg>
         </button></h2>
         <div class="sect-body">
-          <div class="hint-line top">아바타를 교체하거나, 특정 화자를 나레이션으로 지정합니다.</div>
+          <div class="hint-line top">아바타를 교체하거나, 특정 화자를 나레이션으로 지정합니다.<br>화자를 클릭하면 해당 화자의 대화만 표시합니다.</div>
           <div class="av-list" id="avList"><div class="av-empty">변환하면 아바타 목록이 표시됩니다.</div></div>
           <button class="btn alt" id="applyAvatar" type="button" style="width:100%;margin:12px 0 0">아바타 변경 적용</button>
         </div>
@@ -2489,12 +2609,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <style id="liveUserCss"></style>
     <style id="liveDescFont"></style>
     <div class="stage-row">
+      <div class="rail-col" id="railCol">
       <aside class="toc-rail" id="tocRail" aria-label="목차">
         <div class="toc-rail-title">목차</div>
         <div class="toc-rail-count">설정한 목차 <span class="toc-count" id="tocCount">0개</span></div>
         <div class="toc-rail-list" id="tocList"></div>
         <button type="button" class="toc-make-btn" id="tocMakeBtn" aria-pressed="false">목차 생성하기</button>
       </aside>
+      </div>
     <div id="book"><div class="placeholder">
       <b>아직 불러온 로그가 없습니다</b>
       <span>왼쪽에 채팅 HTML을 붙여넣고 변환하기를 누르세요.<br>붙여넣기 칸을 두 번 누르면 큰 편집 창이 열립니다.</span>
@@ -4341,6 +4463,12 @@ function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 
 let MESSAGES = [];
 let AVATARS = [];
+/* 화자 모아보기 필터 — 화자 이름(문자열) 또는 null(전체 보기).
+   모델(MESSAGES)에서 메시지를 지우지 않고, 렌더된 DOM 에서 비대상 블록만 감춘다.
+   → 필터 중에 편집한 내용도 전체 보기로 돌아오면 그대로 남는다. */
+let SPEAKER_FILTER = null;
+/* 속성값용 이스케이프 — esc() 에 없는 따옴표까지 막는다 */
+function escAttr(s){return esc(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 /* ---------- 기본 내장 주사위 굴림 CSS ----------
    세션 로그 변환 시 항상 자동 포함되는 '단독' 인라인 주사위/굴림 결과 스타일.
@@ -4481,6 +4609,108 @@ function stripXmlInvalid(s){
   }
   return out;
 }
+/* ══════════ 로그 메타 (파일명 · 세션 횟수 · 플레이 시간) ══════════
+   Roll20 익스포트의 각 메시지에는 발송 시각(.tstamp)이 들어 있다. 이를 문서 순서대로
+   읽어, 직전 메시지와 60분 이상 벌어지면 "이전 세션 종료 / 새 세션 시작"으로 본다.
+   세션마다 (마지막 시각 − 첫 시각)을 더해 전체 플레이 시간을 낸다.
+   시각이 하나도 없는 로그(편집기 내보내기본 등)에서는 계산하지 않는다. */
+const SESSION_GAP_MIN = 60;   // 세션을 가르는 최소 공백(분)
+let LOG_META = { fileName:'', sessions:0, playMinutes:0, hasTime:false };
+
+const _MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+/* "June 03, 2026 10:53PM" / "2026-06-03 22:53" 등 흔한 표기를 관대하게 읽는다.
+   판별 못 하면 null → 그 메시지는 시간 계산에서 빠진다. */
+function parseTstamp(txt){
+  const t = String(txt||'').trim();
+  if(!t) return null;
+  // (1) 영문 월 표기
+  let m = t.match(/([A-Za-z]{3,})\s+(\d{1,2}),?\s+(\d{4})\s*(?:,|at)?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp])?\.?[Mm]?/);
+  if(m && _MONTHS[m[1].slice(0,3).toLowerCase()]!==undefined){
+    let h=+m[4]; const ap=(m[7]||'').toLowerCase();
+    if(ap==='p' && h<12) h+=12;
+    if(ap==='a' && h===12) h=0;
+    return new Date(+m[3], _MONTHS[m[1].slice(0,3).toLowerCase()], +m[2], h, +m[5], +(m[6]||0)).getTime();
+  }
+  // (2) 숫자 표기 (YYYY-MM-DD / YYYY.MM.DD / YYYY/MM/DD)
+  m = t.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})\D+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp])?\.?[Mm]?/);
+  if(m){
+    let h=+m[4]; const ap=(m[7]||'').toLowerCase();
+    if(ap==='p' && h<12) h+=12;
+    if(ap==='a' && h===12) h=0;
+    return new Date(+m[1], +m[2]-1, +m[3], h, +m[5], +(m[6]||0)).getTime();
+  }
+  const v = Date.parse(t);
+  return isNaN(v) ? null : v;
+}
+
+/* 내보낸 HTML·EPUB 에 남길 표식 — 본문 래퍼(<div id="book">)의 data 속성으로 싣는다.
+   EPUB 재가져오기는 <body> 안쪽만 취하므로 <head><meta> 로는 살아남지 못한다. */
+function logMetaAttrs(){
+  if(!LOG_META.hasTime) return '';
+  return ' data-log-sessions="'+LOG_META.sessions+'" data-log-minutes="'+LOG_META.playMinutes+'"';
+}
+
+/* 파싱 대상 문서에서 시각을 모아 세션 수·총 플레이 시간을 계산한다.
+   발송 시각이 없는 문서(이 편집기가 내보낸 HTML·EPUB)는 위 표식에서 값을 되살린다. */
+function computeLogStats(doc){
+  const times=[];
+  doc.querySelectorAll('.tstamp').forEach(el=>{
+    const v=parseTstamp(el.textContent);
+    if(v!==null) times.push(v);
+  });
+  if(!times.length){
+    const mark=doc.querySelector('[data-log-sessions]');
+    const sN=mark?parseInt(mark.getAttribute('data-log-sessions'),10):NaN;
+    const mN=mark?parseInt(mark.getAttribute('data-log-minutes'),10):NaN;
+    if(isFinite(sN) && sN>0){
+      LOG_META.sessions=sN;
+      LOG_META.playMinutes=isFinite(mN)?mN:0;
+      LOG_META.hasTime=true;
+      return;
+    }
+    LOG_META.sessions=0; LOG_META.playMinutes=0; LOG_META.hasTime=false; return;
+  }
+  times.sort((a,b)=>a-b);   // 문서 순서가 시간순이 아닌 경우를 대비
+  const gapMs = SESSION_GAP_MIN*60*1000;
+  let sessions=1, total=0, start=times[0], prev=times[0];
+  for(let i=1;i<times.length;i++){
+    if(times[i]-prev >= gapMs){
+      total += prev-start;   // 직전 세션: 첫 메시지 ~ 마지막 메시지
+      sessions++;
+      start = times[i];
+    }
+    prev = times[i];
+  }
+  total += prev-start;       // 마지막 세션
+  LOG_META.sessions = sessions;
+  LOG_META.playMinutes = Math.round(total/60000);
+  LOG_META.hasTime = true;
+}
+
+function formatPlayTime(min){
+  if(!min) return '0분';
+  const h=Math.floor(min/60), m=min%60;
+  if(!h) return m+'분';
+  return m ? (h+'시간 '+m+'분') : (h+'시간');
+}
+
+/* 앱바 메타 줄 갱신 — 값이 하나도 없으면 줄 자체를 감춘다 */
+function renderLogMeta(){
+  const box=document.getElementById('appMeta');
+  if(!box) return;
+  const fileEl=document.getElementById('amFile');
+  const sEl=document.getElementById('amSessions');
+  const pEl=document.getElementById('amPlay');
+  const hasFile=!!LOG_META.fileName;
+  if(!hasFile && !LOG_META.hasTime){ box.hidden=true; return; }
+  box.hidden=false;
+  fileEl.textContent = LOG_META.fileName || '붙여넣은 로그';
+  fileEl.title = LOG_META.fileName || '';
+  sEl.textContent = LOG_META.hasTime ? ('세션 '+LOG_META.sessions+'회') : '세션 —';
+  pEl.textContent = LOG_META.hasTime ? ('플레이 '+formatPlayTime(LOG_META.playMinutes)) : '플레이 —';
+  [sEl.previousElementSibling, pEl.previousElementSibling].forEach(sep=>{ if(sep) sep.hidden=false; });
+}
+
 function parseSource(raw){
   // 새 파싱 시 정규화/서명 캐시 초기화 (키 기반이라 stale 은 없지만 메모리 정리 목적)
   try{ _balCache.clear(); _sigCache.clear(); }catch(_){ }
@@ -4489,6 +4719,8 @@ function parseSource(raw){
   const doc = new DOMParser().parseFromString(html,'text/html');
   // 형식 감지: 이 편집기가 내보낸 HTML인지(고유 클래스 msg-general/msg-roll/msg-body/desc-banner 로 판별)
   const isEdited = doc.querySelector('.msg-general, .msg-roll, .msg-body, .desc-banner');
+  // 발송 시각(.tstamp)으로 세션 횟수·플레이 시간을 계산한다 (원본 로그에만 존재)
+  try{ computeLogStats(doc); }catch(_){ }
   const parsed = isEdited ? parseEdited(doc) : parseRoll20(doc);
   return coalesceMessages(parsed);
 }
@@ -4533,6 +4765,9 @@ function parseEdited(doc){
   const root=doc.querySelector('#book')||doc.body;
   // 헤더가 생략된 연속 메시지를 이전 화자에게 귀속시키기 위한 캐리 상태
   let carrySpeaker='', carryAvatar='', carryNarr=false;
+  /* 나레이션으로 지정돼 있던 화자 이름 모음 — 복원 후 AVATARS 에 narration=true 로 되살린다.
+     (구버전 내보내기처럼 표식이 없는 나레이션 블록은 '(이름 없음)' 화자로 간주한다) */
+  const narrNames=new Set();
   // 최상위 블록만 순회 (.msg, .desc-banner, hr.divider 는 무시)
   Array.from(root.children).forEach(node=>{
     if(node.classList && node.classList.contains('desc-banner')){
@@ -4561,6 +4796,14 @@ function parseEdited(doc){
     let avatar = (avImg && avImg.tagName==='IMG') ? avImg.getAttribute('src') : '';
     const spkEl=clone.querySelector('.speaker');
     let speaker=spkEl?spkEl.textContent.trim():'';
+    /* 나레이션 블록: 헤더가 없으므로 data-narr-spk / data-narr-av 표식에서 화자를 되살린다.
+       표식이 없는 구버전 파일은 '(이름 없음)' 화자의 나레이션으로 본다. */
+    if(isNarr && !isRoll && !isInsert){
+      speaker = node.hasAttribute('data-narr-spk') ? (node.getAttribute('data-narr-spk')||'') : '';
+      const navv = node.getAttribute('data-narr-av')||'';
+      if(navv) avatar = navv;
+      narrNames.add(speaker);
+    }
     const hasHeaderEl = !!node.querySelector('.msg-head');
     // 헤더가 없는 연속 메시지(같은 화자의 다음 줄)면 직전 화자/아바타를 물려받는다.
     //   (이름 없음) 화자는 이름이 '' 이므로 carryAvatar 만으로도 상속한다 — 아바타가
@@ -4579,7 +4822,7 @@ function parseEdited(doc){
       if(speaker || avatar){ carrySpeaker=speaker; carryAvatar=avatar; carryNarr=false; }
     } else {
       const bodyEl=clone.querySelector('.msg-body');
-      out.push({type:'general', isHidden:false, speaker, avatar, byEmpty:isNarr,
+      out.push({type:'general', isHidden:false, speaker, avatar, byEmpty:(isNarr && !speaker),
         isRoll:false, rollHTML:'', bodyHTML: bodyEl?bodyEl.innerHTML.trim():'', whisper:isWhisper, insert:isInsert});
       // 다음 연속 메시지가 물려받을 화자/아바타 갱신
       if(isNarr){ carrySpeaker=''; carryAvatar=''; carryNarr=true; }
@@ -4587,6 +4830,11 @@ function parseEdited(doc){
     }
   });
   rebuildSpeakers(out, avatarMap);
+  // 나레이션 지정 복원 — 화자 목록에서 다시 '나레이션'으로 켜 둔다
+  narrNames.forEach(nm=>{
+    const e=AVATARS.find(a=>a.name===nm);
+    if(e) e.narration=true;
+  });
   return out;
 }
 
@@ -4895,8 +5143,10 @@ function effectiveAvatar(url){
 function rebuildSpeakers(out, avatarMap){
   const prevRep  = new Map(AVATARS.map(a=>[a.original, a.replacement]));
   const prevNarr = new Map(AVATARS.map(a=>[a.name, !!a.narration]));
+  const prevHide = new Map(AVATARS.map(a=>[a.name, !!a.hidden]));
   const list = [...avatarMap.entries()].map(([url,name])=>({
-    name, original:url, replacement: prevRep.get(url)||'', narration: prevNarr.get(name)||false
+    name, original:url, replacement: prevRep.get(url)||'', narration: prevNarr.get(name)||false,
+    hidden: prevHide.get(name)||false
   }));
   const seen = new Set(list.map(a=>a.name));
   out.forEach(m=>{
@@ -4905,71 +5155,195 @@ function rebuildSpeakers(out, avatarMap){
     const nm = m.byEmpty ? '' : m.speaker;
     if((nm || m.byEmpty) && !seen.has(nm)){
       seen.add(nm);
-      list.push({name:nm, original:'', replacement:'', narration: prevNarr.get(nm)||false});
+      list.push({name:nm, original:'', replacement:'', narration: prevNarr.get(nm)||false,
+        hidden: prevHide.get(nm)||false});
     }
   });
   AVATARS = list;
+  // 재파싱으로 사라진 화자에 걸려 있던 모아보기 필터는 해제한다
+  if(SPEAKER_FILTER!==null && !AVATARS.some(a=>a.name===SPEAKER_FILTER)) SPEAKER_FILTER=null;
 }
 
-/* ---------- speaker list UI (아바타 교체 + 나레이션 지정) ---------- */
+/* 눈 가림(eye-slash) 아이콘 — 아바타 위에 흰색 40% 로 겹쳐 숨기기 토글임을 알린다 */
+const AV_EYE_SVG = '<svg class="av-eye" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" '+
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+  '<path d="M17.9 17.9A10.1 10.1 0 0 1 12 20C5 20 1 12 1 12a18.5 18.5 0 0 1 5.1-6M9.9 4.2A9.1 9.1 0 0 1 12 4'+
+  'c7 0 11 8 11 8a18.5 18.5 0 0 1-2.2 3.2m-6.7-1.1a3 3 0 1 1-4.2-4.2"/>'+
+  '<line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+/* 이름 표시: 빈 이름은 (이름 없음), 화면에 안 보이는 기호/PUA 문자만으로 된 이름은
+   (기호 이름) 으로 안내 — 사용자가 나레이션 지정 대상을 식별할 수 있게 한다. */
+function avNameLabel(a){
+  const nameHasVisible = /[0-9A-Za-z\uAC00-\uD7A3\u3131-\u318E\u4E00-\u9FFF\u3040-\u30FF\u3000-\u303F!-~]/.test(a.name||'');
+  if(!a.name) return '(이름 없음)';
+  if(!nameHasVisible) return '(기호 이름 · 나레이션 마커일 수 있음)';
+  return esc(a.name);
+}
+
+/* 링크 인라인 편집 — .av-url 자리에서 그대로 입력 상태로 전환한다.
+   진입 시 빈 입력칸 + 기존 값은 placeholder(회색)로 안내. Enter/blur 확정, Esc 취소,
+   비운 채 확정하면 기존 값 유지. 카드 아래에 칸이 새로 열리지 않으므로 높이가 변하지 않는다. */
+function startAvUrlEdit(urlEl, i){
+  if(!urlEl || urlEl.querySelector('input')) return;
+  if(!AVATARS[i]) return;
+  const before = urlEl.textContent;
+  const inp = document.createElement('input');
+  inp.type='text'; inp.className='av-url-input'; inp.value=''; inp.placeholder=before;
+  urlEl.textContent='';
+  urlEl.appendChild(inp);
+  inp.focus();
+  let done=false;
+  const finish=(commit)=>{
+    if(done) return; done=true;
+    const v=inp.value.trim();
+    if(commit && v && v!==AVATARS[i].replacement){
+      AVATARS[i].replacement=v;
+      if(MESSAGES.length){ syncEditsToModel(); snapshot(renderPreview()); }
+    }
+    renderAvatarList();
+  };
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){ e.preventDefault(); finish(true); }
+    else if(e.key==='Escape'){ e.preventDefault(); finish(false); }
+  });
+  inp.addEventListener('blur',()=>finish(true));
+  inp.addEventListener('click',e=>e.stopPropagation());
+}
+
+/* ---------- speaker list UI (아바타 교체 + 나레이션 지정 + 숨기기 + 모아보기) ---------- */
 function renderAvatarList(){
   const box=document.getElementById('avList');
+  renderSpeakerFilterCard();   // 필터 상태 안내 카드도 목록과 함께 동기화
   if(!AVATARS.length){box.innerHTML='<div class="av-empty">파싱하면 화자 목록이 표시됩니다.</div>';return;}
   box.innerHTML='';
   AVATARS.forEach((a,i)=>{
     const item=document.createElement('div');
-    item.className='av-item'+(a.replacement?' changed':'')+(a.narration?' narr':'');
+    item.className='av-item'+(a.replacement?' changed':'')+(a.narration?' narr':'')
+      +(a.hidden?' spk-hidden':'')+(SPEAKER_FILTER===a.name?' spk-only':'');
     const shown = a.replacement || a.original;
-    // 이름 표시: 빈 이름은 (이름 없음), 화면에 안 보이는 기호/PUA 문자만으로 된 이름은
-    //   (기호 이름) 으로 안내 — 사용자가 나레이션 지정 대상을 식별할 수 있게 한다.
-    const nameHasVisible = /[0-9A-Za-z\uAC00-\uD7A3\u3131-\u318E\u4E00-\u9FFF\u3040-\u30FF\u3000-\u303F!-~]/.test(a.name||'');
-    let nameLabel;
-    if(!a.name) nameLabel='(이름 없음)';
-    else if(!nameHasVisible) nameLabel='(기호 이름 · 나레이션 마커일 수 있음)';
-    else nameLabel=esc(a.name);
-    const imgHtml = shown
-      ? '<img src="'+esc(shown)+'" title="클릭하면 새 아바타 URL 입력칸이 열립니다" data-i="'+i+'" class="av-thumb">'
-      : '<span class="av-noimg av-thumb" data-i="'+i+'" title="클릭하면 새 아바타 URL 입력칸이 열립니다"></span>';
-    // 현재 아바타 링크(있으면). URL 입력칸은 기본 숨김 → 아바타 클릭 시 이 링크 아래에 열림.
-    const curLink = a.original
-      ? '<div class="av-url">'+esc(a.replacement?('→ '+a.replacement):a.original)+'</div>'
-      : '<div class="av-url">아바타 이미지 없음</div>';
+    const nameLabel = avNameLabel(a);
+    const thumb = shown
+      ? '<img src="'+escAttr(shown)+'" class="av-thumb" alt="">'
+      : '<span class="av-noimg av-thumb"></span>';
+    // 아바타 아이콘 자체가 '이 화자 숨기기' 토글이다 (호버 시 어두워지며 eye-slash 노출)
+    const thumbHtml =
+      '<span class="av-thumb-wrap" data-i="'+i+'" title="'+
+        (a.hidden?'클릭하면 이 화자의 발화를 다시 표시합니다':'클릭하면 이 화자의 발화를 미리보기에서 숨깁니다')+'">'+
+        thumb+AV_EYE_SVG+
+      '</span>';
+    // 현재 아바타 링크(있으면). 이 줄을 클릭하면 제자리에서 입력 상태로 바뀐다.
+    const urlText = a.original
+      ? (a.replacement?('→ '+a.replacement):a.original)
+      : '아바타 이미지 없음';
     item.innerHTML=
-      imgHtml+
+      thumbHtml+
       '<div class="av-meta">'+
         '<div class="av-name">'+nameLabel+'</div>'+
-        curLink+
-        '<div class="av-url-edit" data-i="'+i+'" style="display:none">'+
-          '<input type="text" placeholder="새 아바타 URL (비우면 기존 유지)" value="'+esc(a.replacement)+'" data-i="'+i+'">'+
-        '</div>'+
+        '<div class="av-url" data-i="'+i+'" title="클릭하면 새 아바타 URL 을 입력합니다">'+esc(urlText)+'</div>'+
       '</div>'+
       '<button type="button" class="av-narr-btn'+(a.narration?' on':'')+'" data-i="'+i+'" '+
         'title="이 화자의 대사를 나레이션으로 표시">'+(a.narration?'나레이션':'일반')+'</button>';
     box.appendChild(item);
   });
-  box.querySelectorAll('input').forEach(inp=>{
-    inp.addEventListener('input',e=>{AVATARS[+e.target.dataset.i].replacement=e.target.value.trim();});
+  // A) 링크 클릭 → 제자리 인라인 편집
+  box.querySelectorAll('.av-url').forEach(el=>{
+    el.addEventListener('click',e=>{
+      e.stopPropagation();
+      startAvUrlEdit(el, +el.dataset.i);
+    });
   });
-  // 항목의 어느 곳을 클릭해도(일반/나레이션 버튼·URL 입력칸 제외) 새 아바타 URL 입력칸이 열린다
+  // B) 아바타 아이콘 클릭 → 이 화자의 발화 숨기기/보이기 (카드 클릭·링크 클릭은 트리거하지 않음)
+  box.querySelectorAll('.av-thumb-wrap').forEach(el=>{
+    el.addEventListener('click',e=>{
+      e.stopPropagation();
+      const i=+el.dataset.i;
+      AVATARS[i].hidden=!AVATARS[i].hidden;
+      applySpeakerVisibility();
+      renderAvatarList();
+    });
+  });
+  // C) 카드 본문 클릭 → 이 화자만 모아보기 (다시 클릭하면 해제). 안내는 레일 카드에 표시된다.
   box.querySelectorAll('.av-item').forEach((item,idx)=>{
     item.addEventListener('click',e=>{
-      if(e.target.closest('.av-narr-btn')) return;        // 토글 버튼은 제외
-      if(e.target.closest('.av-url-edit')) return;         // 입력칸 내부 클릭은 그대로
-      const edit=item.querySelector('.av-url-edit');
-      if(!edit) return;
-      const opening = edit.style.display==='none';
-      edit.style.display = opening ? 'block' : 'none';
-      if(opening){ const inp=edit.querySelector('input'); if(inp){ inp.focus(); inp.select(); } }
+      if(e.target.closest('.av-narr-btn')) return;    // 나레이션 토글 제외
+      if(e.target.closest('.av-thumb-wrap')) return;  // 숨기기 아이콘 제외
+      if(e.target.closest('.av-url')) return;         // 링크 편집 제외
+      const nm=AVATARS[idx].name;
+      setSpeakerFilter(SPEAKER_FILTER===nm ? null : nm);
+      renderAvatarList();
     });
   });
   // 일반 ↔ 나레이션 토글: 클릭 즉시 미리보기 반영
   box.querySelectorAll('.av-narr-btn').forEach(btn=>{
     btn.addEventListener('click',e=>{
+      e.stopPropagation();
       const i=+e.currentTarget.dataset.i;
       AVATARS[i].narration=!AVATARS[i].narration;
       if(MESSAGES.length){ syncEditsToModel(); snapshot(renderPreview()); }
       renderAvatarList();
     });
+  });
+}
+
+/* ---------- 화자 숨김 / 모아보기 필터 (미리보기 전용) ----------
+   렌더된 #book 의 최상위 블록에 붙은 data-spk(소유 화자 이름)를 보고 감출 블록만
+   .spk-hide 로 표시한다. MESSAGES 를 건드리지 않으므로 필터 중 편집분도 그대로 남는다. */
+function applySpeakerVisibility(){
+  const book=document.getElementById('book');
+  if(!book) return;
+  const hideSet=new Set(AVATARS.filter(a=>a.hidden).map(a=>a.name));
+  const kids=[...book.children];
+  const isSep=el=>el.classList.contains('msg-gap')||el.classList.contains('divider');
+  // 1) 내용 블록
+  kids.forEach(el=>{
+    if(isSep(el)) return;
+    let hide;
+    if(el.hasAttribute('data-spk')){
+      const nm=el.getAttribute('data-spk');
+      hide = (SPEAKER_FILTER!==null) ? (nm!==SPEAKER_FILTER) : hideSet.has(nm);
+    }else{
+      hide = (SPEAKER_FILTER!==null);   // 화자 없는 연출/삽입물은 모아보기 중엔 감춘다
+    }
+    el.classList.toggle('spk-hide', hide);
+  });
+  // 2) 구분선·갭 — 뒤따르는 내용 블록이 감춰졌거나 앞에 보이는 블록이 없으면 함께 감춘다
+  let seenVisible=false;
+  kids.forEach((el,i)=>{
+    if(!isSep(el)){ if(!el.classList.contains('spk-hide')) seenVisible=true; return; }
+    let next=null;
+    for(let j=i+1;j<kids.length;j++){ if(!isSep(kids[j])){ next=kids[j]; break; } }
+    el.classList.toggle('spk-hide', !seenVisible || !next || next.classList.contains('spk-hide'));
+  });
+}
+
+/* 필터 설정/해제 — 재렌더 없이 표시만 바꾼다.
+   해제(전체 보기) 시에도 편집분이 모델에 확실히 반영되도록 syncEditsToModel() 을 먼저 호출한다. */
+function setSpeakerFilter(name){
+  if(MESSAGES.length){ try{ syncEditsToModel(); }catch(_){ } }
+  SPEAKER_FILTER = (name===null||name===undefined) ? null : name;
+  applySpeakerVisibility();
+  renderSpeakerFilterCard();
+}
+
+/* D) 목차 레일 하단 — 필터 상태 안내 카드 (필터가 없으면 DOM 에서 제거) */
+function renderSpeakerFilterCard(){
+  // 목차 레일과는 별개의 카드 — 레일 아래(같은 열)에 독립적으로 놓는다
+  const rail=document.getElementById('railCol')||document.getElementById('tocRail');
+  if(!rail) return;
+  const old=document.getElementById('tocFilterCard');
+  if(old) old.remove();
+  if(SPEAKER_FILTER===null) return;
+  const a=AVATARS.find(x=>x.name===SPEAKER_FILTER);
+  const label=a?avNameLabel(a):esc(SPEAKER_FILTER);
+  const card=document.createElement('div');
+  card.className='toc-filter-card';
+  card.id='tocFilterCard';
+  card.innerHTML='<div class="toc-filter-msg">\u2018<b>'+label+'</b>\u2019의 대화만<br>표시 중입니다.</div>'+
+    '<button type="button" class="toc-filter-btn" id="tocFilterAllBtn">전체 보기</button>';
+  rail.appendChild(card);
+  card.querySelector('#tocFilterAllBtn').addEventListener('click',()=>{
+    setSpeakerFilter(null);
+    renderAvatarList();
   });
 }
 
@@ -4993,6 +5367,9 @@ function buildBook(forExport){
   let lastWasNarrationHeader = false; // (구) — 미사용
   let lastRenderedSpeaker = null;    // 직전에 실제로 렌더된 (내레이션 아닌) 화자. 내레이션을 지나면 null.
   let lastRenderedKey = null;        // 직전 렌더 화자의 (이름+아바타) 키 — 아바타까지 같아야 연속으로 본다.
+  // 미리보기 전용: 블록마다 '소유 화자' 이름을 data-spk 로 남긴다 (화자 숨김/모아보기용).
+  //   내보내기(forExport)에는 절대 붙이지 않는다.
+  let curOwnerName = null;
   let html = '';
   // 블록 간 간격(갭) 판정용 — 직전에 렌더된 블록의 종류.
   //   'general'   : 일반 화자 대사(롤 포함)
@@ -5068,6 +5445,11 @@ function buildBook(forExport){
       return;
     }
     const isTurnStart = !!(m.speaker || m.avatar || m.byEmpty);
+    // 소유 화자 갱신 — 화자 헤더가 있는 줄에서 갱신하고, 이어지는 줄은 그 화자를 물려받는다.
+    // (편집기 삽입물은 화자가 없으므로 소유 화자를 갱신하지도, 표식을 달지도 않는다)
+    if(isTurnStart && !m.insert) curOwnerName = (m.speaker||'');
+    const spkAttr = (!forExport && !m.insert && curOwnerName!==null)
+      ? ' data-spk="'+escAttr(curOwnerName)+'"' : '';
 
     // 나레이션 여부는 '화자 설정에서 나레이션으로 지정된 화자'일 때만 시작한다 (자동 간주 제거).
     // 빈 이름(byEmpty) 메시지는 화자 목록에 '(이름 없음)' 항목(name:'')으로 나타나며,
@@ -5158,7 +5540,7 @@ function buildBook(forExport){
 
     if(m.isRoll && optRoll){
       // 롤 테이블: 헤더는 동일 정렬, 테이블 본문은 메시지 전체 폭 사용
-      html += '<div class="msg msg-roll"'+dataIdx+tocAttr+'>'+delBtn+header+'<div class="roll-body">'+m.rollHTML+'</div></div>';
+      html += '<div class="msg msg-roll"'+dataIdx+spkAttr+tocAttr+'>'+delBtn+header+'<div class="roll-body">'+m.rollHTML+'</div></div>';
       // 다이스 굴림(롤)은 장면을 끊는 연출로 취급 → 뒤따르는 같은 화자도 헤더를 다시 보여준다.
       lastRenderedSpeaker = null; lastRenderedKey = null;
       prevBlockType = curBlockType;
@@ -5169,7 +5551,14 @@ function buildBook(forExport){
     let cls = isNarration ? 'msg msg-general msg-narration' : 'msg msg-general';
     if(m.whisper) cls += ' msg-whisper';   // 귓속말: 회색(#616161) 스타일
     if(m.insert)  cls += ' msg-insert';    // 우클릭 삽입물(이미지/핸드아웃): 전체폭·기본폰트
-    html += '<div class="'+cls+'"'+dataIdx+tocAttr+'>'+delBtn+header+body+'</div>';
+    /* 나레이션 블록은 헤더(이름·아바타)를 렌더하지 않으므로, 내보낸 HTML 을 다시 불러오면
+       '어느 화자를 나레이션으로 지정했는지'를 복원할 근거가 사라진다. → 화자 정체성을
+       data-narr-spk / data-narr-av 로 남겨 재가져오기 때 그대로 되살린다.
+       (편집기 삽입물은 원래 화자가 없으므로 제외. 내보내기에도 함께 남긴다) */
+    const narrAttr = (isNarration && !m.insert)
+      ? ' data-narr-spk="'+escAttr(m.speaker||'')+'"'+(m.avatar?' data-narr-av="'+escAttr(m.avatar)+'"':'')
+      : '';
+    html += '<div class="'+cls+'"'+dataIdx+spkAttr+narrAttr+tocAttr+'>'+delBtn+header+body+'</div>';
     prevBlockType = curBlockType;
     return;
   });
@@ -5241,6 +5630,7 @@ function renderPreview(){
   // 본문 편집 on/off 는 buildBook 이 직접 반영하므로 재렌더 후 개별 요소 순회가 필요 없다 (성능)
   const builtHtml=buildBook(false);
   book.innerHTML=builtHtml;
+  applySpeakerVisibility();   // 화자 숨김/모아보기 상태를 새 DOM 에 다시 입힌다
   restoreScrollAnchor(anchor);
   // 방금 만든 문자열을 반환 — 직후의 snapshot() 이 DOM 재직렬화(innerHTML 읽기) 없이 재사용한다 (성능)
   return builtHtml;
@@ -5608,6 +5998,7 @@ function restoreState(s){
   restoring=true;
   const anchor=captureScrollAnchor();   // undo/redo 후에도 보던 위치 유지 (블록 앵커 기준)
   document.getElementById('book').innerHTML=s.html;
+  applySpeakerVisibility();   // 되돌리기/다시하기 후에도 화자 숨김/모아보기 상태 유지
   restoreScrollAnchor(anchor);
   if(s.deleted) MESSAGES.forEach((m,i)=>{ m.deleted=!!s.deleted[i]; });
   if(s.forcedHeader) MESSAGES.forEach((m,i)=>{
@@ -6031,6 +6422,8 @@ function finishDrop(srcIdx, targetIdx, before){
 /* ---------- events ---------- */
 document.getElementById('fileInput').addEventListener('change',async e=>{
   const f=e.target.files[0]; if(!f)return;
+  LOG_META.fileName = f.name || '';   // 앱바에 표시할 입력 파일명
+  renderLogMeta();
   const status=document.getElementById('epubStatus');
   const isEpub=/\.epub$/i.test(f.name) || f.type==='application/epub+zip';
   if(isEpub){
@@ -6060,7 +6453,7 @@ document.getElementById('fileInput').addEventListener('change',async e=>{
       const bad=countReplacementChars(txt);
       status.textContent = bad>0
         ? ('파일을 불러왔습니다 — 글자 '+bad+'자는 인코딩 판별에 실패했습니다.')
-        : '파일을 불러왔습니다.';
+        : '';
     };
     r.readAsArrayBuffer(f);
   }
@@ -6285,6 +6678,7 @@ document.getElementById('parseBtn').addEventListener('click',()=>runParse(docume
 function runParse(raw){
   if(!raw.trim()){alert('HTML을 입력하거나 파일을 올려주세요.');return;}
   MESSAGES=parseSource(raw);
+  renderLogMeta();
   renderAvatarList();
   applyTextStyle();   // 폰트/자간/줄간격 반영
   renderPreview();
@@ -7923,7 +8317,7 @@ function buildPageCss(forEpub){
 '.msg.msg-narration .msg-body{padding-left:var(--indent, calc(var(--av) + var(--avgap)));font-family:var(--user-font-narr);font-weight:400;line-height:var(--user-lh-narr)}\n'+
 '#book.no-avatar{--indent:24px}\n'+
 '#book.no-avatar .msg .msg-head{padding-left:12px}\n'+
-'.msg.msg-whisper .speaker, .msg.msg-whisper .msg-body{color:#616161}\n'+
+'.msg.msg-whisper{background:#FBFDDE}\n'+
 '.msg.msg-insert .msg-body{padding-left:0;font-family:inherit}\n'+
 '.msg-body img{display:block;margin:6px auto;max-width:100%;height:auto}\n'+
 '.msg:not(.msg-insert) .msg-body > img, .msg:not(.msg-insert) .msg-body a > img{position:relative;left:calc(-0.5 * var(--indent, calc(var(--av) + var(--avgap))))}\n'+
@@ -7946,6 +8340,9 @@ function buildPageCss(forEpub){
 async function buildExportedHtmlDoc(){
   const live=document.getElementById('book').cloneNode(true);
   live.querySelectorAll('.msg-del,.msg-drag,.insert-bar,.drop-indicator').forEach(el=>el.remove());
+  // 내보내기에는 화자 숨김·모아보기 상태를 절대 반영하지 않는다 — 항상 전체 화자를 출력
+  live.querySelectorAll('.spk-hide').forEach(el=>el.classList.remove('spk-hide'));
+  live.querySelectorAll('[data-spk]').forEach(el=>el.removeAttribute('data-spk'));
   live.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   live.querySelectorAll('.placeholder').forEach(el=>el.remove());
   // 목차 앵커의 id 는 남기고(문서 내 링크로 쓸 수 있다) 편집기 전용 표식만 지운다
@@ -7974,7 +8371,7 @@ async function buildExportedHtmlDoc(){
   const pageCss=buildPageCss();
   return '<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n'+
     '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>채팅 로그</title>\n'+
-    '<style>\n'+pageCss+'\n</style>\n</head>\n<body>\n<div id="book"'+(live.classList.contains('no-avatar')?' class="no-avatar"':'')+'>\n'+bodyHTML+'\n</div>\n</body>\n</html>';
+    '<style>\n'+pageCss+'\n</style>\n</head>\n<body>\n<div id="book"'+(live.classList.contains('no-avatar')?' class="no-avatar"':'')+logMetaAttrs()+'>\n'+bodyHTML+'\n</div>\n</body>\n</html>';
 }
 
 async function exportHtml(){
@@ -8192,6 +8589,9 @@ async function exportEpub(){
   // 1) 미리보기 본문에서 편집 결과 추출 (HTML 다운로드와 동일한 정제)
   const live=document.getElementById('book').cloneNode(true);
   live.querySelectorAll('.msg-del,.msg-drag,.insert-bar,.drop-indicator').forEach(el=>el.remove());
+  // 내보내기에는 화자 숨김·모아보기 상태를 절대 반영하지 않는다 — 항상 전체 화자를 출력
+  live.querySelectorAll('.spk-hide').forEach(el=>el.classList.remove('spk-hide'));
+  live.querySelectorAll('[data-spk]').forEach(el=>el.removeAttribute('data-spk'));
   live.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   live.querySelectorAll('.placeholder').forEach(el=>el.remove());
 
@@ -8388,7 +8788,7 @@ async function exportEpub(){
     oebps.file('cover.xhtml',coverPage);
   }
 
-  const bookCls = live.classList.contains('no-avatar') ? ' class="no-avatar"' : '';
+  const bookCls = (live.classList.contains('no-avatar') ? ' class="no-avatar"' : '') + logMetaAttrs();
   chapterFiles.forEach(ch=>{
     oebps.file(ch.file,
 '<?xml version="1.0" encoding="utf-8"?>\n'+
