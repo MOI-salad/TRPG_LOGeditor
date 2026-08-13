@@ -1983,6 +1983,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     .toc-make-btn{grid-column:3;width:auto;justify-self:end;padding:0 var(--s3)}
     .toc-rail-list{grid-column:1 / -1;margin:0;max-height:150px}
     .toc-rail-empty{padding:0 2px}
+    /* 미리보기 본문 — 폭이 고정된 삽입물(롤 테이블·표·이미지)이 화면 밖으로 밀지 않게.
+       화면을 줄이면 본문 블록이 함께 줄고, 줄일 수 없는 롤 테이블만 그 블록 안에서
+       가로로 스크롤된다. (본문 전체가 옆으로 밀려 편집이 불가능해지던 문제) */
+    #book{max-width:100%}
+    #book > *{max-width:100%}
+    #book .roll-body{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    #book img{max-width:100%;height:auto}
     /* 필터 안내 카드 — 문구 왼쪽, 전체 보기 버튼 오른쪽 끝 */
     .toc-filter-card{
       display:grid;grid-template-columns:1fr auto;align-items:center;
